@@ -52,15 +52,16 @@ button {
 }
 
 /* 端っこYouTube（完全に見えない） */
+/* 端っこYouTube（ほぼ見えないが存在はする） */
 .player {
   position: fixed;
-  right: 0;
-  bottom: 0;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none; /* タップ不可 */
-  overflow: hidden;
+  right: 6px;
+  bottom: 6px;
+  width: 160px;
+  height: 90px;
+  opacity: 0.1;          /* ← ここが肝 */
+  pointer-events: auto;  /* ← タップ可能（広告用） */
+  transition: opacity 0.3s ease;
 }
 
 .player iframe {
