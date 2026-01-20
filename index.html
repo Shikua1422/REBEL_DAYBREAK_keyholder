@@ -18,6 +18,7 @@ body {
   padding: 30px 15px;
 }
 
+/* CD */
 .cd {
   width: 260px;
   height: 260px;
@@ -67,14 +68,21 @@ button {
   cursor: pointer;
 }
 
-/* ▼ 見えないが再生はされる */
+/* 小さく表示するYouTube */
 .player {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  width: 160px;
+  height: 90px;
+  z-index: 10;
+  opacity: 0.9;
+}
+
+.player iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
 }
 </style>
 </head>
@@ -90,28 +98,26 @@ button {
 
   <button onclick="play()">▶ PLAY</button>
 
-  <!-- DOMには存在するが見えない -->
-  <div class="player">
-    <iframe
-      id="ytplayer"
-      width="560"
-      height="315"
-      src="https://www.youtube-nocookie.com/embed/HCoTcCMLRsM?rel=0&playsinline=1"
-      title="YouTube video player"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen>
-    </iframe>
-  </div>
+</div>
 
+<!-- 端っこに常時表示 -->
+<div class="player">
+  <iframe
+    id="ytplayer"
+    src="https://www.youtube-nocookie.com/embed/HCoTcCMLRsM?rel=0&playsinline=1"
+    title="YouTube video player"
+    frameborder="0"
+    allow="autoplay; encrypted-media; picture-in-picture"
+    allowfullscreen>
+  </iframe>
 </div>
 
 <script>
 function play() {
-  // CD回転開始
+  // CD回転
   document.getElementById("cd").style.animationPlayState = "running";
 
-  // autoplay を付与（ユーザー操作内なのでiOS OK）
+  // autoplay付与（ユーザー操作内）
   const iframe = document.getElementById("ytplayer");
   if (!iframe.src.includes("autoplay=1")) {
     iframe.src += "&autoplay=1";
