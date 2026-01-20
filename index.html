@@ -23,10 +23,16 @@ body {
   height: 260px;
   margin: 30px auto;
   border-radius: 50%;
-  background: radial-gradient(circle at center, #666 0%, #333 40%, #000 70%);
+
+  background-image: url("cd.jpeg"); /* ← 画像 */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
   animation: spin 8s linear infinite;
   animation-play-state: paused;
 }
+
 
 @keyframes spin {
   from { transform: rotate(0deg); }
