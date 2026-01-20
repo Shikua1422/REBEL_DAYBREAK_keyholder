@@ -2,115 +2,74 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Now Playing</title>
-
+<title>CD Player</title>
 <style>
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  background: #111;
-  color: #fff;
-  text-align: center;
-}
-
-.container {
-  padding: 30px 15px;
-}
-
-.cd {
-  width: 260px;
-  height: 260px;
-  margin: 30px auto;
-  border-radius: 50%;
-  background: radial-gradient(circle at center, #666 0%, #333 40%, #000 70%);
-  position: relative;
-  animation: spin 8s linear infinite;
-  animation-play-state: paused;
-}
-
-.cd::after {
-  content: "";
-  width: 40px;
-  height: 40px;
-  background: #111;
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.title {
-  font-size: 20px;
-  margin-top: 10px;
-}
-
-.artist {
-  font-size: 14px;
-  color: #aaa;
-  margin-bottom: 20px;
-}
-
-button {
-  background: #fff;
-  color: #000;
-  border: none;
-  padding: 12px 30px;
-  font-size: 16px;
-  border-radius: 30px;
-  cursor: pointer;
-}
-
-.player {
-  margin-top: 25px;
-  max-width: 560px;
-  margin-left: auto;
-  margin-right: auto;
-}
+  body {
+    background:#111;
+    color:#fff;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    font-family:sans-serif;
+  }
+  .cd {
+    width:260px;
+    height:260px;
+    border-radius:50%;
+    background:radial-gradient(circle,#444 0%,#111 60%);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    position:relative;
+  }
+  .skip {
+    position:absolute;
+    bottom:-40px;
+    font-size:12px;
+    opacity:0.6;
+    cursor:pointer;
+  }
 </style>
 </head>
-
 <body>
 
-<div class="container">
-
-  <div class="cd" id="cd"></div>
-
-  <div class="title">Q</div>
-  <div class="artist">REBEL</div>
-
-  <button onclick="play()">▶ PLAY</button>
-
-  <!-- iframeは最初からDOMに置く（重要） -->
-  <div class="player">
-    <iframe
-      id="ytplayer"
-      width="100%"
-      height="315"
-      src="https://www.youtube-nocookie.com/embed/HCoTcCMLRsM?si=nYokaPO0b5w2V-Ye?rel=0&playsinline=1"
-      title="YouTube video player"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen>
-    </iframe>
+<div class="cd">
+  <div id="player" style="width:0;height:0;overflow:hidden;"></div>
+  <div class="skip" onclick="openYoutube()">
+    再生できない場合はこちら
   </div>
-
 </div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-function play() {
-  // CD回転開始
-  document.getElementById("cd").style.animationPlayState = "running";
+let player;
 
-  // 再生指示（ユーザー操作内なのでOK）
-  const iframe = document.getElementById("ytplayer");
-  iframe.src += "&autoplay=1";
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('player', {
+    videoId: 'VIDEO_ID',
+    playerVars: {
+      autoplay: 1,
+      controls: 0,
+      rel: 0,
+      playsinline: 1,
+      mute: 1
+    },
+    events: {
+      onReady: onPlayerReady
+    }
+  });
+}
+
+function onPlayerReady() {
+  // 最初の5秒は無音
+  setTimeout(() => {
+    player.unMute();
+  }, 5000);
+}
+
+function openYoutube() {
+  window.open('https://www.youtube.com/watch?v=HCoTcCMLRsM?si=cxobZcbi_lfGk19m', '_blank');
 }
 </script>
 
