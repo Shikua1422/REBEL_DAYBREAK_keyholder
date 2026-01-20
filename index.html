@@ -45,7 +45,7 @@ button {
   cursor: pointer;
 }
 
-/* 完全に見えないYouTube */
+/* 端っこYouTube（完全に見えない） */
 .player {
   position: fixed;
   right: 0;
@@ -53,8 +53,14 @@ button {
   width: 1px;
   height: 1px;
   opacity: 0;
-  pointer-events: none;
+  pointer-events: none; /* タップ不可 */
   overflow: hidden;
+}
+
+.player iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
 }
 </style>
 </head>
@@ -73,6 +79,7 @@ button {
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 let ytPlayer;
+let fadeInterval;
 
 function onYouTubeIframeAPIReady() {
   ytPlayer = new YT.Player('player', {
@@ -80,6 +87,9 @@ function onYouTubeIframeAPIReady() {
     playerVars: {
       playsinline: 1,
       rel: 0
+    },
+    events: {
+      onStateChange: onStateChange
     }
   });
 }
@@ -88,6 +98,7 @@ function start() {
   document.getElementById("cd").style.animationPlayState = "running";
   ytPlayer.playVideo();
 }
+
 </script>
 
 </body>
