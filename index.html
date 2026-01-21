@@ -9,24 +9,26 @@
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
-  background: #111;
+  background: linear-gradient(#111, #000);
   color: #fff;
-  text-align: center;
 }
 
 .container {
-  padding: 30px 15px;
+  padding: 30px 20px;
+  max-width: 420px;
+  margin: 0 auto;
+  text-align: center;
 }
 
+/* CD（ジャケット） */
 .cd {
   width: 260px;
   height: 260px;
-  margin: 30px auto;
+  margin: 20px auto 30px;
   border-radius: 50%;
   background-image: url("cd.jpeg");
   background-size: cover;
   background-position: center;
-  background-repeat: no-repeat;
   animation: spin 10s linear infinite;
   animation-play-state: paused;
 }
@@ -36,34 +38,55 @@ body {
   to { transform: rotate(360deg); }
 }
 
-.title { font-size: 20px; }
-.artist { font-size: 14px; color: #aaa; margin-bottom: 20px; }
-
-button {
-  background: #fff;
-  color: #000;
-  border: none;
-  padding: 12px 30px;
-  border-radius: 30px;
-  cursor: pointer;
+/* 曲情報 */
+.title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
-/* コントロールUI */
+.artist {
+  font-size: 14px;
+  color: #aaa;
+  margin-bottom: 25px;
+}
+
+/* シークバー */
+.seek-wrapper {
+  width: 100%;
+}
+
+#seek {
+  width: 100%;
+}
+
+.time {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+/* コントロール */
 .controls {
-  margin-top: 20px;
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 25px;
 }
 
 .controls button {
   background: none;
-  color: #fff;
-  font-size: 22px;
   border: none;
+  color: #fff;
+  font-size: 26px;
   cursor: pointer;
-  margin-right: 10px;
 }
 
-#seek {
-  width: 220px;
+.controls .play {
+  font-size: 36px;
 }
 
 /* ほぼ見えないYouTube（安定重視） */
@@ -81,17 +104,26 @@ button {
 <body>
 
 <div class="container">
+
   <div class="cd" id="cd"></div>
+
   <div class="title">Q</div>
   <div class="artist">REBEL</div>
 
-  <button onclick="start()">▶ PLAY</button>
-
-  <!-- 追加UI -->
-  <div class="controls">
-    <button onclick="togglePlay()" id="playBtn">▶</button>
+  <div class="seek-wrapper">
     <input type="range" id="seek" value="0" min="0" max="100" step="0.1" oninput="seekTo(this.value)">
+    <div class="time">
+      <span id="current">0:00</span>
+      <span id="duration">0:00</span>
+    </div>
   </div>
+
+  <div class="controls">
+    <button>⏮</button>
+    <button class="play" id="playBtn" onclick="togglePlay()">▶</button>
+    <button>⏭</button>
+  </div>
+
 </div>
 
 <div class="player" id="player"></div>
@@ -100,7 +132,7 @@ button {
 <script>
 let ytPlayer;
 let isPlaying = false;
-let seekTimer;
+let timer;
 
 function onYouTubeIframeAPIReady() {
   ytPlayer = new YT.Player('player', {
@@ -115,17 +147,9 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
-function start() {
-  ytPlayer.playVideo();
-}
-
 function togglePlay() {
   if (!ytPlayer) return;
-  if (isPlaying) {
-    ytPlayer.pauseVideo();
-  } else {
-    ytPlayer.playVideo();
-  }
+  isPlaying ? ytPlayer.pauseVideo() : ytPlayer.playVideo();
 }
 
 function onStateChange(e) {
@@ -136,44 +160,43 @@ function onStateChange(e) {
     isPlaying = true;
     btn.textContent = "⏸";
     cd.style.animationPlayState = "running";
-    startSeekUpdater();
+    startTimer();
   }
 
-  if (e.data === YT.PlayerState.PAUSED) {
+  if (e.data === YT.PlayerState.PAUSED || e.data === YT.PlayerState.ENDED) {
     isPlaying = false;
     btn.textContent = "▶";
     cd.style.animationPlayState = "paused";
-    stopSeekUpdater();
-  }
-
-  if (e.data === YT.PlayerState.ENDED) {
-    isPlaying = false;
-    btn.textContent = "▶";
-    cd.style.animationPlayState = "paused";
-    stopSeekUpdater();
-    document.getElementById("seek").value = 0;
+    stopTimer();
   }
 }
 
-function startSeekUpdater() {
-  stopSeekUpdater();
-  seekTimer = setInterval(() => {
-    const duration = ytPlayer.getDuration();
-    const current = ytPlayer.getCurrentTime();
-    if (duration > 0) {
-      document.getElementById("seek").value = (current / duration) * 100;
+function startTimer() {
+  stopTimer();
+  timer = setInterval(() => {
+    const cur = ytPlayer.getCurrentTime();
+    const dur = ytPlayer.getDuration();
+    if (dur) {
+      document.getElementById("seek").value = (cur / dur) * 100;
+      document.getElementById("current").textContent = format(cur);
+      document.getElementById("duration").textContent = format(dur);
     }
   }, 500);
 }
 
-function stopSeekUpdater() {
-  clearInterval(seekTimer);
+function stopTimer() {
+  clearInterval(timer);
 }
 
-function seekTo(value) {
-  const duration = ytPlayer.getDuration();
-  if (!duration) return;
-  ytPlayer.seekTo((value / 100) * duration, true);
+function seekTo(v) {
+  const dur = ytPlayer.getDuration();
+  if (dur) ytPlayer.seekTo((v / 100) * dur, true);
+}
+
+function format(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
 }
 </script>
 
