@@ -18,28 +18,14 @@ body {
   padding: 30px 15px;
 }
 
-/* CD */
 .cd {
   width: 260px;
   height: 260px;
   margin: 30px auto;
   border-radius: 50%;
   background: radial-gradient(circle at center, #666 0%, #333 40%, #000 70%);
-  position: relative;
   animation: spin 8s linear infinite;
   animation-play-state: paused;
-}
-
-.cd::after {
-  content: "";
-  width: 40px;
-  height: 40px;
-  background: #111;
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
 @keyframes spin {
@@ -47,42 +33,28 @@ body {
   to { transform: rotate(360deg); }
 }
 
-.title {
-  font-size: 20px;
-  margin-top: 10px;
-}
-
-.artist {
-  font-size: 14px;
-  color: #aaa;
-  margin-bottom: 20px;
-}
+.title { font-size: 20px; }
+.artist { font-size: 14px; color: #aaa; margin-bottom: 20px; }
 
 button {
   background: #fff;
   color: #000;
   border: none;
   padding: 12px 30px;
-  font-size: 16px;
   border-radius: 30px;
   cursor: pointer;
 }
 
-/* 小さく表示するYouTube */
+/* 完全に見えないYouTube */
 .player {
   position: fixed;
-  right: 8px;
-  bottom: 8px;
-  width: 160px;
-  height: 90px;
-  z-index: 10;
-  opacity: 0.9;
-}
-
-.player iframe {
-  width: 100%;
-  height: 100%;
-  border-radius: 6px;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
 }
 </style>
 </head>
@@ -90,38 +62,31 @@ button {
 <body>
 
 <div class="container">
-
   <div class="cd" id="cd"></div>
-
   <div class="title">Q</div>
   <div class="artist">REBEL</div>
-
-  <button onclick="play()">▶ PLAY</button>
-
+  <button onclick="start()">▶ PLAY</button>
 </div>
 
-<!-- 端っこに常時表示 -->
-<div class="player">
-  <iframe
-    id="ytplayer"
-    src="https://www.youtube-nocookie.com/embed/HCoTcCMLRsM?rel=0&playsinline=1"
-    title="YouTube video player"
-    frameborder="0"
-    allow="autoplay; encrypted-media; picture-in-picture"
-    allowfullscreen>
-  </iframe>
-</div>
+<div class="player" id="player"></div>
 
+<script src="https://www.youtube.com/iframe_api"></script>
 <script>
-function play() {
-  // CD回転
-  document.getElementById("cd").style.animationPlayState = "running";
+let ytPlayer;
 
-  // autoplay付与（ユーザー操作内）
-  const iframe = document.getElementById("ytplayer");
-  if (!iframe.src.includes("autoplay=1")) {
-    iframe.src += "&autoplay=1";
-  }
+function onYouTubeIframeAPIReady() {
+  ytPlayer = new YT.Player('player', {
+    videoId: 'HCoTcCMLRsM',
+    playerVars: {
+      playsinline: 1,
+      rel: 0
+    }
+  });
+}
+
+function start() {
+  document.getElementById("cd").style.animationPlayState = "running";
+  ytPlayer.playVideo();
 }
 </script>
 
