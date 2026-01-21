@@ -91,8 +91,7 @@ button {
   <div class="artist">REBEL</div>
 
   <div class="controls">
-    <button onclick="play()">▶</button>
-    <button onclick="pause()">⏸</button>
+    <button id="playBtn" onclick="togglePlay()">▶</button>
 
     <input
       type="range"
@@ -119,12 +118,14 @@ let ytPlayer;
 let duration = 0;
 let seeking = false;
 let readyForPlayback = false;
+let isPlaying = false;
 let stableTimer = null;
 let rotationTimer = null;
 
 const seekbar = document.getElementById("seekbar");
 const cd = document.getElementById("cd");
 const currentEl = document.getElementById("current");
+const playBtn = document.getElementById("playBtn");
 
 /* 回線判定 */
 function isLikelyWifi() {
@@ -158,45 +159,53 @@ function onReady() {
   updateLoop();
 }
 
-/* ▶ 再生 */
-function play() {
-  ytPlayer.mute();
-  ytPlayer.playVideo();
-}
+/* ▶ / ⏸ トグル */
+function togglePlay() {
+  if (!ytPlayer) return;
 
-/* ⏸ 停止 */
-function pause() {
-  ytPlayer.pauseVideo();
-  cd.style.animationPlayState = "paused"; // ★ 回転停止
+  if (isPlaying) {
+    ytPlayer.pauseVideo();
+    cd.style.animationPlayState = "paused";
+    playBtn.textContent = "▶";
+    isPlaying = false;
+  } else {
+    ytPlayer.playVideo();
+    cd.style.animationPlayState = "running";
+    playBtn.textContent = "⏸";
+    isPlaying = true;
+
+    // ★ 初回再生でなければ即音を戻す
+    if (readyForPlayback) {
+      ytPlayer.unMute();
+      ytPlayer.setVolume(100);
+    } else {
+      ytPlayer.mute();
+    }
+  }
 }
 
 /* 再生状態変化 */
 function onStateChange(e) {
 
-  if (e.data === YT.PlayerState.PLAYING) {
+  if (e.data === YT.PlayerState.PLAYING && !readyForPlayback) {
+    ytPlayer.mute();
 
-    // 回転再開
-    cd.style.animationPlayState = "running";
-
-    if (!readyForPlayback) {
-      ytPlayer.mute();
-
-      stableTimer = setTimeout(startRotationPhase, 1000);
-    }
+    stableTimer = setTimeout(startRotationPhase, 1000);
   }
 
-  // 一時停止・停止時
   if (
     e.data === YT.PlayerState.PAUSED ||
     e.data === YT.PlayerState.ENDED
   ) {
     cd.style.animationPlayState = "paused";
+    playBtn.textContent = "▶";
+    isPlaying = false;
     clearTimeout(stableTimer);
     clearTimeout(rotationTimer);
   }
 }
 
-/* 回転開始フェーズ（まだ無音） */
+/* 回転フェーズ（まだ無音） */
 function startRotationPhase() {
   rotationTimer = setTimeout(() => {
     if (cd.style.animationPlayState === "running") {
@@ -230,23 +239,19 @@ function startAudioPlayback() {
 /* シーク操作 */
 seekbar.addEventListener("input", () => {
   if (!readyForPlayback) return;
-
   seeking = true;
-
-  // ★ シーク中も時間表示を更新
   const preview = (seekbar.value / 100) * duration;
   currentEl.textContent = format(preview);
 });
 
 seekbar.addEventListener("change", () => {
   if (!readyForPlayback) return;
-
   const target = (seekbar.value / 100) * duration;
   ytPlayer.seekTo(target, true);
   seeking = false;
 });
 
-/* 時間更新ループ */
+/* 時間更新 */
 function updateLoop() {
   if (
     ytPlayer &&
@@ -261,7 +266,6 @@ function updateLoop() {
   requestAnimationFrame(updateLoop);
 }
 
-/* 時間整形 */
 function format(sec) {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
@@ -271,6 +275,7 @@ function format(sec) {
 
 </body>
 </html>
+
 
 
 
