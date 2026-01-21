@@ -23,12 +23,10 @@ body {
   height: 260px;
   margin: 30px auto;
   border-radius: 50%;
-
-  background-image: url("cd.jpeg"); /* ← 画像 */
+  background-image: url("cd.jpeg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-
   animation: spin 10s linear infinite;
   animation-play-state: paused;
 }
@@ -50,16 +48,32 @@ button {
   cursor: pointer;
 }
 
-/* 完全に見えないYouTube */
+/* コントロールUI */
+.controls {
+  margin-top: 20px;
+}
+
+.controls button {
+  background: none;
+  color: #fff;
+  font-size: 22px;
+  border: none;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+#seek {
+  width: 220px;
+}
+
+/* ほぼ見えないYouTube（安定重視） */
 .player {
   position: fixed;
-  right: 0;
-  bottom: 0;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-  overflow: hidden;
+  right: 6px;
+  bottom: 6px;
+  width: 160px;
+  height: 90px;
+  opacity: 0.1;
 }
 </style>
 </head>
@@ -70,7 +84,14 @@ button {
   <div class="cd" id="cd"></div>
   <div class="title">Q</div>
   <div class="artist">REBEL</div>
+
   <button onclick="start()">▶ PLAY</button>
+
+  <!-- 追加UI -->
+  <div class="controls">
+    <button onclick="togglePlay()" id="playBtn">▶</button>
+    <input type="range" id="seek" value="0" min="0" max="100" step="0.1" oninput="seekTo(this.value)">
+  </div>
 </div>
 
 <div class="player" id="player"></div>
@@ -78,6 +99,8 @@ button {
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 let ytPlayer;
+let isPlaying = false;
+let seekTimer;
 
 function onYouTubeIframeAPIReady() {
   ytPlayer = new YT.Player('player', {
@@ -85,17 +108,74 @@ function onYouTubeIframeAPIReady() {
     playerVars: {
       playsinline: 1,
       rel: 0
+    },
+    events: {
+      onStateChange: onStateChange
     }
   });
 }
 
 function start() {
-  document.getElementById("cd").style.animationPlayState = "running";
   ytPlayer.playVideo();
+}
+
+function togglePlay() {
+  if (!ytPlayer) return;
+  if (isPlaying) {
+    ytPlayer.pauseVideo();
+  } else {
+    ytPlayer.playVideo();
+  }
+}
+
+function onStateChange(e) {
+  const cd = document.getElementById("cd");
+  const btn = document.getElementById("playBtn");
+
+  if (e.data === YT.PlayerState.PLAYING) {
+    isPlaying = true;
+    btn.textContent = "⏸";
+    cd.style.animationPlayState = "running";
+    startSeekUpdater();
+  }
+
+  if (e.data === YT.PlayerState.PAUSED) {
+    isPlaying = false;
+    btn.textContent = "▶";
+    cd.style.animationPlayState = "paused";
+    stopSeekUpdater();
+  }
+
+  if (e.data === YT.PlayerState.ENDED) {
+    isPlaying = false;
+    btn.textContent = "▶";
+    cd.style.animationPlayState = "paused";
+    stopSeekUpdater();
+    document.getElementById("seek").value = 0;
+  }
+}
+
+function startSeekUpdater() {
+  stopSeekUpdater();
+  seekTimer = setInterval(() => {
+    const duration = ytPlayer.getDuration();
+    const current = ytPlayer.getCurrentTime();
+    if (duration > 0) {
+      document.getElementById("seek").value = (current / duration) * 100;
+    }
+  }, 500);
+}
+
+function stopSeekUpdater() {
+  clearInterval(seekTimer);
+}
+
+function seekTo(value) {
+  const duration = ytPlayer.getDuration();
+  if (!duration) return;
+  ytPlayer.seekTo((value / 100) * duration, true);
 }
 </script>
 
 </body>
 </html>
-
-
