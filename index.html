@@ -1,3 +1,119 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Now Playing</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  background: #111;
+  color: #fff;
+  text-align: center;
+}
+
+.container {
+  padding: 30px 15px;
+}
+
+.cd {
+  width: 260px;
+  height: 260px;
+  margin: 30px auto;
+  border-radius: 50%;
+  background-image: url("cd.jpeg");
+  background-size: cover;
+  background-position: center;
+  animation: spin 10s linear infinite;
+  animation-play-state: paused;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.title { font-size: 20px; }
+.artist { font-size: 14px; color: #aaa; margin-bottom: 20px; }
+
+.controls {
+  max-width: 320px;
+  margin: 20px auto 0;
+}
+
+button {
+  background: #fff;
+  color: #000;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  margin: 0 5px;
+}
+
+.seekbar {
+  width: 100%;
+}
+
+.seekbar:disabled {
+  opacity: 0.4;
+}
+
+.time {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 4px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ほぼ見えないYouTube */
+.player {
+  position: fixed;
+  right: 6px;
+  bottom: 6px;
+  width: 160px;
+  height: 90px;
+  opacity: 0.05;
+  pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="cd" id="cd"></div>
+  <div class="title">Q</div>
+  <div class="artist">REBEL</div>
+
+  <div class="controls">
+    <button onclick="play()">▶</button>
+    <button onclick="pause()">⏸</button>
+
+    <input
+      type="range"
+      min="0"
+      max="100"
+      value="0"
+      class="seekbar"
+      id="seekbar"
+      disabled
+    >
+
+    <div class="time">
+      <span id="current">0:00</span>
+      <span id="duration">0:00</span>
+    </div>
+  </div>
+</div>
+
+<div id="player" class="player"></div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 let ytPlayer;
@@ -122,3 +238,6 @@ function format(sec) {
   return `${m}:${s}`;
 }
 </script>
+
+</body>
+</html>
