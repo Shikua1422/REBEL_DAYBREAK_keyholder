@@ -116,39 +116,33 @@ button {
 <script>
 let ytPlayer;
 let duration = 0;
-
 let seeking = false;
-let readyForPlayback = false;
+
 let isPlaying = false;
-
-let stableTimer = null;
+let rotationStartTime = null;
 let rotationTimer = null;
-let confirmTimer = null;
 
-let lastTime = 0;
-let progressCount = 0;
+let currentTrack = 0;
 
-const seekbar = document.getElementById("seekbar");
+/* アルバム */
+const album = [
+  { id: "HCoTcCMLRsM", title: "Q", artist: "REBEL" },
+  { id: "p8iNb7sTNiY", title: "ロストワンの号哭", artist: "REBEL" },
+  { id: "uC44M7_srjg", title: "DOGLAND", artist: "REBEL" }
+];
+
 const cd = document.getElementById("cd");
-const currentEl = document.getElementById("current");
+const seekbar = document.getElementById("seekbar");
 const playBtn = document.getElementById("playBtn");
 
-/* 回線判定 */
-function isLikelyWifi() {
-  if (!navigator.connection) return false;
-  return navigator.connection.type === "wifi"
-    || navigator.connection.effectiveType === "4g";
-}
-
+/* YouTube */
 function onYouTubeIframeAPIReady() {
-  ytPlayer = new YT.Player('player', {
-    videoId: 'HCoTcCMLRsM',
+  ytPlayer = new YT.Player("player", {
+    videoId: album[0].id,
     playerVars: {
       playsinline: 1,
       controls: 0,
-      rel: 0,
-      modestbranding: 1,
-      iv_load_policy: 3
+      rel: 0
     },
     events: {
       onReady,
@@ -158,143 +152,114 @@ function onYouTubeIframeAPIReady() {
 }
 
 function onReady() {
-  ytPlayer.mute();
-  ytPlayer.setPlaybackQuality('small');
-  duration = ytPlayer.getDuration();
-  document.getElementById("duration").textContent = format(duration);
+  ytPlayer.setVolume(0);
+  updateTrackInfo();
   updateLoop();
 }
 
-/* ▶ / ⏸ */
-function togglePlay() {
-  if (!ytPlayer) return;
-
-  if (isPlaying) {
-    ytPlayer.pauseVideo();
-    cd.style.animationPlayState = "paused";
-    playBtn.textContent = "▶";
-    isPlaying = false;
-    return;
-  }
-
-  ytPlayer.playVideo();
-  playBtn.textContent = "⏸";
-  isPlaying = true;
-
-  // 2回目以降は即回転＋音
-  if (readyForPlayback) {
-    cd.style.animationPlayState = "running";
-    ytPlayer.unMute();
-    ytPlayer.setVolume(100);
-  } else {
-    ytPlayer.mute();
-  }
-}
-
-/* 状態変化 */
 function onStateChange(e) {
-
-  if (e.data === YT.PlayerState.PLAYING && !readyForPlayback) {
-    lastTime = ytPlayer.getCurrentTime();
-    progressCount = 0;
-
-    // 再生位置の進行を監視
-    confirmTimer = setInterval(confirmMainPlayback, 200);
+  if (e.data === YT.PlayerState.PLAYING) {
+    startRotationIfNeeded();
   }
 
-  if (
-    e.data === YT.PlayerState.PAUSED ||
-    e.data === YT.PlayerState.ENDED
-  ) {
-    cd.style.animationPlayState = "paused";
-    playBtn.textContent = "▶";
-    isPlaying = false;
-    clearAllTimers();
+  if (e.data === YT.PlayerState.ENDED) {
+    nextTrack();
   }
 }
 
-/* 本編判定 */
-function confirmMainPlayback() {
-  const now = ytPlayer.getCurrentTime();
-
-  if (now > lastTime + 0.1) {
-    progressCount++;
+/* 再生ボタン */
+function togglePlay() {
+  if (isPlaying) {
+    pause();
   } else {
-    progressCount = 0;
-  }
-
-  lastTime = now;
-
-  // 3回連続で進行したら本編濃厚
-  if (progressCount >= 3) {
-    clearInterval(confirmTimer);
-    startRotationPhase();
+    play();
   }
 }
 
-/* 回転開始（まだ無音） */
-function startRotationPhase() {
-  cd.style.animationPlayState = "running";
+function play() {
+  ytPlayer.playVideo();
+  isPlaying = true;
+  playBtn.textContent = "⏸";
+}
 
+function pause() {
+  ytPlayer.pauseVideo();
+  stopRotation();
+  ytPlayer.setVolume(0);
+  isPlaying = false;
+  playBtn.textContent = "▶";
+}
+
+/* 回転制御 */
+function startRotationIfNeeded() {
+  if (cd.style.animationPlayState === "running") return;
+
+  cd.style.animationPlayState = "running";
+  rotationStartTime = performance.now();
+
+  clearTimeout(rotationTimer);
   rotationTimer = setTimeout(() => {
     if (cd.style.animationPlayState === "running") {
-      startAudioPlayback();
+      ytPlayer.setVolume(100);
     }
   }, 300);
 }
 
-/* 音解禁 */
-function startAudioPlayback() {
-  if (readyForPlayback) return;
-
-  readyForPlayback = true;
-  seekbar.disabled = false;
-
-  ytPlayer.unMute();
-  ytPlayer.setVolume(0);
-
-  let vol = 0;
-  const fade = setInterval(() => {
-    vol += 5;
-    ytPlayer.setVolume(vol);
-    if (vol >= 100) clearInterval(fade);
-  }, 100);
-
-  ytPlayer.setPlaybackQuality(
-    isLikelyWifi() ? 'hd720' : 'small'
-  );
+function stopRotation() {
+  cd.style.animationPlayState = "paused";
+  clearTimeout(rotationTimer);
 }
 
 /* シーク */
 seekbar.addEventListener("input", () => {
-  if (!readyForPlayback) return;
   seeking = true;
-  const preview = (seekbar.value / 100) * duration;
-  currentEl.textContent = format(preview);
+  const t = (seekbar.value / 100) * duration;
+  document.getElementById("current").textContent = format(t);
 });
 
 seekbar.addEventListener("change", () => {
-  if (!readyForPlayback) return;
-  ytPlayer.seekTo((seekbar.value / 100) * duration, true);
+  const t = (seekbar.value / 100) * duration;
+  ytPlayer.seekTo(t, true);
   seeking = false;
 });
 
-/* 更新 */
+/* 時間更新 */
 function updateLoop() {
-  if (ytPlayer && ytPlayer.getCurrentTime && readyForPlayback && !seeking) {
-    const current = ytPlayer.getCurrentTime();
-    seekbar.value = (current / duration) * 100;
-    currentEl.textContent = format(current);
+  if (ytPlayer && ytPlayer.getCurrentTime) {
+    duration = ytPlayer.getDuration() || duration;
+    const cur = ytPlayer.getCurrentTime();
+
+    if (!seeking && duration) {
+      seekbar.value = (cur / duration) * 100;
+    }
+
+    document.getElementById("current").textContent = format(cur);
+    document.getElementById("duration").textContent = format(duration);
   }
   requestAnimationFrame(updateLoop);
 }
 
-function clearAllTimers() {
-  clearInterval(confirmTimer);
-  clearTimeout(rotationTimer);
-  clearTimeout(stableTimer);
+/* 曲切り替え */
+function nextTrack() {
+  currentTrack = (currentTrack + 1) % album.length;
+  loadTrack();
 }
 
+function loadTrack() {
+  stopRotation();
+  ytPlayer.setVolume(0);
+  ytPlayer.loadVideoById(album[currentTrack].id);
+  updateTrackInfo();
+  isPlaying = false;
+  playBtn.textContent = "▶";
+}
+
+function updateTrackInfo() {
+  document.querySelector(".title").textContent = album[currentTrack].title;
+  document.querySelector(".artist").textContent = album[currentTrack].artist;
+}
+
+/* util */
 function format(sec) {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
@@ -304,6 +269,7 @@ function format(sec) {
 
 </body>
 </html>
+
 
 
 
