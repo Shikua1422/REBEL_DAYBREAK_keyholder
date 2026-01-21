@@ -114,13 +114,13 @@ button {
 <div id="player" class="player"></div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-<script src="https://www.youtube.com/iframe_api"></script>
 <script>
 let ytPlayer;
 let duration = 0;
 let seeking = false;
 let readyForPlayback = false;
 let stableTimer = null;
+let rotationTimer = null;
 
 const seekbar = document.getElementById("seekbar");
 const cd = document.getElementById("cd");
@@ -151,14 +151,14 @@ function onYouTubeIframeAPIReady() {
 
 function onReady() {
   ytPlayer.setPlaybackQuality('small');
-  ytPlayer.setVolume(0); // ★ 常に初期は無音
+  ytPlayer.setVolume(0); // 常に初期無音
   duration = ytPlayer.getDuration();
   document.getElementById("duration").textContent = format(duration);
   updateLoop();
 }
 
 function play() {
-  ytPlayer.setVolume(0); // ★ PLAY押下時も必ず無音
+  ytPlayer.setVolume(0);
   ytPlayer.playVideo();
 }
 
@@ -168,24 +168,39 @@ function pause() {
 
 function onStateChange(e) {
   if (e.data === YT.PlayerState.PLAYING && !readyForPlayback) {
-    ytPlayer.setVolume(0); // ★ PLAYING直後も即ミュート
+    ytPlayer.setVolume(0); // PLAYING即ミュート
 
-    // 再生が1秒安定したら「本編開始」
-    stableTimer = setTimeout(startMainPlayback, 1000);
+    // 再生が1秒安定したら回転フェーズへ
+    stableTimer = setTimeout(startRotationPhase, 1000);
   }
 
-  if (e.data !== YT.PlayerState.PLAYING && stableTimer) {
-    clearTimeout(stableTimer);
+  if (e.data !== YT.PlayerState.PLAYING) {
+    if (stableTimer) clearTimeout(stableTimer);
+    if (rotationTimer) clearTimeout(rotationTimer);
     stableTimer = null;
+    rotationTimer = null;
   }
 }
 
-function startMainPlayback() {
+/* 回転開始フェーズ（※まだ音は出さない） */
+function startRotationPhase() {
   if (readyForPlayback) return;
-  readyForPlayback = true;
 
   // CD回転開始
   cd.style.animationPlayState = "running";
+
+  // 0.3秒以上回転が続いたら音解禁
+  rotationTimer = setTimeout(() => {
+    if (cd.style.animationPlayState === "running") {
+      startAudioPlayback();
+    }
+  }, 300);
+}
+
+/* 本当の本編開始（音・UI解禁） */
+function startAudioPlayback() {
+  if (readyForPlayback) return;
+  readyForPlayback = true;
 
   // シーク解放
   seekbar.disabled = false;
@@ -198,7 +213,7 @@ function startMainPlayback() {
     if (vol >= 100) clearInterval(fade);
   }, 100);
 
-  // 画質切替（ここで初めて）
+  // 画質切替
   ytPlayer.setPlaybackQuality(
     isLikelyWifi() ? 'hd720' : 'small'
   );
@@ -241,3 +256,4 @@ function format(sec) {
 
 </body>
 </html>
+
