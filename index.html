@@ -47,15 +47,15 @@ button {
   background: #fff;
   color: #000;
   border: none;
-  padding: 8px 18px;
+  padding: 10px 22px;
   border-radius: 20px;
   font-size: 14px;
   cursor: pointer;
-  margin: 0 5px;
 }
 
 .seekbar {
   width: 100%;
+  margin-top: 14px;
 }
 
 .seekbar:disabled {
@@ -75,8 +75,8 @@ button {
   position: fixed;
   right: 6px;
   bottom: 6px;
-  width: 16px;
-  height: 9px;
+  width: 160px;
+  height: 90px;
   opacity: 0.05;
   pointer-events: none;
 }
@@ -117,32 +117,22 @@ button {
 let ytPlayer;
 let duration = 0;
 let seeking = false;
-
+let ready = false;
 let isPlaying = false;
-let rotationStartTime = null;
-let rotationTimer = null;
-
-let currentTrack = 0;
-
-/* アルバム */
-const album = [
-  { id: "HCoTcCMLRsM", title: "Q", artist: "REBEL" },
-  { id: "p8iNb7sTNiY", title: "ロストワンの号哭", artist: "REBEL" },
-  { id: "uC44M7_srjg", title: "DOGLAND", artist: "REBEL" }
-];
+let rotationStartedAt = null;
 
 const cd = document.getElementById("cd");
 const seekbar = document.getElementById("seekbar");
 const playBtn = document.getElementById("playBtn");
 
-/* YouTube */
 function onYouTubeIframeAPIReady() {
-  ytPlayer = new YT.Player("player", {
-    videoId: album[0].id,
+  ytPlayer = new YT.Player('player', {
+    videoId: 'HCoTcCMLRsM',
     playerVars: {
       playsinline: 1,
       controls: 0,
-      rel: 0
+      rel: 0,
+      iv_load_policy: 3
     },
     events: {
       onReady,
@@ -153,113 +143,96 @@ function onYouTubeIframeAPIReady() {
 
 function onReady() {
   ytPlayer.setVolume(0);
-  updateTrackInfo();
+  duration = ytPlayer.getDuration();
+  document.getElementById("duration").textContent = format(duration);
   updateLoop();
+}
+
+function togglePlay() {
+  if (!ready) {
+    ytPlayer.playVideo();
+    return;
+  }
+
+  if (isPlaying) {
+    ytPlayer.pauseVideo();
+  } else {
+    ytPlayer.playVideo();
+  }
 }
 
 function onStateChange(e) {
   if (e.data === YT.PlayerState.PLAYING) {
-    startRotationIfNeeded();
-  }
+    isPlaying = true;
+    playBtn.textContent = "⏸";
 
-  if (e.data === YT.PlayerState.ENDED) {
-    nextTrack();
-  }
-}
-
-/* 再生ボタン */
-function togglePlay() {
-  if (isPlaying) {
-    pause();
-  } else {
-    play();
-  }
-}
-
-function play() {
-  ytPlayer.playVideo();
-  isPlaying = true;
-  playBtn.textContent = "⏸";
-}
-
-function pause() {
-  ytPlayer.pauseVideo();
-  stopRotation();
-  ytPlayer.setVolume(0);
-  isPlaying = false;
-  playBtn.textContent = "▶";
-}
-
-/* 回転制御 */
-function startRotationIfNeeded() {
-  if (cd.style.animationPlayState === "running") return;
-
-  cd.style.animationPlayState = "running";
-  rotationStartTime = performance.now();
-
-  clearTimeout(rotationTimer);
-  rotationTimer = setTimeout(() => {
-    if (cd.style.animationPlayState === "running") {
-      ytPlayer.setVolume(100);
+    if (!ready) {
+      cd.style.animationPlayState = "running";
+      rotationStartedAt = performance.now();
+      monitorRotation();
+    } else {
+      cd.style.animationPlayState = "running";
     }
-  }, 300);
+  }
+
+  if (e.data === YT.PlayerState.PAUSED) {
+    isPlaying = false;
+    playBtn.textContent = "▶";
+    cd.style.animationPlayState = "paused";
+  }
 }
 
-function stopRotation() {
-  cd.style.animationPlayState = "paused";
-  clearTimeout(rotationTimer);
+/* 回転が0.3秒以上進んだら本編扱い */
+function monitorRotation() {
+  if (!rotationStartedAt) return;
+
+  const elapsed = (performance.now() - rotationStartedAt) / 1000;
+
+  if (elapsed >= 0.3) {
+    ready = true;
+    seekbar.disabled = false;
+
+    let vol = 0;
+    const fade = setInterval(() => {
+      vol += 5;
+      ytPlayer.setVolume(vol);
+      if (vol >= 100) clearInterval(fade);
+    }, 100);
+
+    return;
+  }
+
+  requestAnimationFrame(monitorRotation);
 }
 
-/* シーク */
+/* シーク操作 */
 seekbar.addEventListener("input", () => {
+  if (!ready) return;
   seeking = true;
-  const t = (seekbar.value / 100) * duration;
-  document.getElementById("current").textContent = format(t);
+  ytPlayer.pauseVideo();
 });
 
 seekbar.addEventListener("change", () => {
-  const t = (seekbar.value / 100) * duration;
-  ytPlayer.seekTo(t, true);
+  if (!ready) return;
+  const target = (seekbar.value / 100) * duration;
+  ytPlayer.seekTo(target, true);
+  ytPlayer.playVideo();
   seeking = false;
 });
 
 /* 時間更新 */
 function updateLoop() {
   if (ytPlayer && ytPlayer.getCurrentTime) {
-    duration = ytPlayer.getDuration() || duration;
-    const cur = ytPlayer.getCurrentTime();
+    const current = ytPlayer.getCurrentTime();
+    document.getElementById("current").textContent = format(current);
 
-    if (!seeking && duration) {
-      seekbar.value = (cur / duration) * 100;
+    if (ready && !seeking && duration) {
+      seekbar.value = (current / duration) * 100;
     }
-
-    document.getElementById("current").textContent = format(cur);
-    document.getElementById("duration").textContent = format(duration);
   }
   requestAnimationFrame(updateLoop);
 }
 
-/* 曲切り替え */
-function nextTrack() {
-  currentTrack = (currentTrack + 1) % album.length;
-  loadTrack();
-}
-
-function loadTrack() {
-  stopRotation();
-  ytPlayer.setVolume(0);
-  ytPlayer.loadVideoById(album[currentTrack].id);
-  updateTrackInfo();
-  isPlaying = false;
-  playBtn.textContent = "▶";
-}
-
-function updateTrackInfo() {
-  document.querySelector(".title").textContent = album[currentTrack].title;
-  document.querySelector(".artist").textContent = album[currentTrack].artist;
-}
-
-/* util */
 function format(sec) {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
@@ -269,10 +242,3 @@ function format(sec) {
 
 </body>
 </html>
-
-
-
-
-
-
-
