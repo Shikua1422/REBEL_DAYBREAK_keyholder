@@ -68,15 +68,14 @@ body {
   margin: 20px auto;
 }
 
-/* ===== 動画（CD中心基準） ===== */
+/* ===== 動画 ===== */
 .video {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 220px;          /* ← CD内に収まるサイズ */
-  height: 124px;         /* 16:9維持 */
+  width: 220px;
+  height: 124px;
   transform: translate(-50%, -50%);
-  opacity: 1;
   pointer-events: none;
   z-index: 1;
 }
@@ -87,11 +86,10 @@ body {
   object-fit: contain;
 }
 
-/* CDがミニの時だけ動画を大きくする（追加） */
+/* CDミニ時は動画拡大 */
 .stage.cd-mini .video {
   width: 360px;
-  height: 202px; /* 16:9維持 */
-  opacity: 1;
+  height: 202px;
 }
 
 /* ===== CD ===== */
@@ -107,12 +105,12 @@ body {
   transition: all 0.45s ease;
 }
 
-/* ミニCD（さらに上へ） */
+/* ミニCD */
 .cd.mini {
   width: 58px;
   height: 58px;
-  top: -50px;     /* ← さらに上 */
-  left: -22px;
+  top: -56px;
+  left: -24px;
 }
 
 @keyframes spin {
@@ -120,37 +118,93 @@ body {
   to   { transform: rotate(360deg); }
 }
 
-/* ===== 情報 ===== */
-.title { font-size: 18px; margin-top: 10px; }
-.artist { font-size: 14px; color: #aaa; }
+/* ===== 曲情報 ===== */
+.title {
+  font-size: 18px;
+  margin-top: 12px;
+}
+
+.artist {
+  font-size: 14px;
+  color: #aaa;
+}
 
 /* ===== コントロール ===== */
 .controls {
   max-width: 320px;
-  margin: 15px auto 0;
+  margin: 20px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-button {
+/* ボタン */
+.control-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+
+.control-buttons button {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.control-buttons button:hover {
+  background: rgba(255,255,255,0.22);
+  transform: scale(1.08);
+}
+
+#playBtn {
+  width: 64px;
+  height: 64px;
+  font-size: 26px;
   background: #fff;
   color: #000;
-  border: none;
-  padding: 8px 14px;
-  border-radius: 20px;
-  font-size: 14px;
-  margin: 0 4px;
+}
+
+/* ===== シークバー ===== */
+.seekbar {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #fff 0%,
+    #fff var(--seek, 0%),
+    #444 var(--seek, 0%),
+    #444 100%
+  );
+  outline: none;
   cursor: pointer;
 }
 
-.seekbar {
-  width: 100%;
-  margin-top: 10px;
+.seekbar::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  margin-top: -5px;
 }
 
+/* ===== 時間 ===== */
 .time {
-  font-size: 12px;
-  color: #aaa;
+  font-size: 11px;
+  color: #888;
   display: flex;
   justify-content: space-between;
+  letter-spacing: 0.5px;
 }
 </style>
 </head>
@@ -173,9 +227,11 @@ button {
   <div class="artist" id="artist"></div>
 
   <div class="controls">
-    <button onclick="prev()">⏮</button>
-    <button id="playBtn" onclick="toggle()">▶</button>
-    <button onclick="next()">⏭</button>
+    <div class="control-buttons">
+      <button onclick="prev()">⏮</button>
+      <button id="playBtn" onclick="toggle()">▶</button>
+      <button onclick="next()">⏭</button>
+    </div>
 
     <input type="range" id="seekbar" class="seekbar" min="0" max="100">
 
@@ -241,7 +297,6 @@ function pause() {
   playBtn.textContent = "▶";
 }
 
-/* 回転 */
 function startRotation() {
   if (cd.style.animationPlayState === "running") return;
   cd.style.animationPlayState = "running";
@@ -254,14 +309,12 @@ function stopRotation() {
   clearTimeout(rotationTimer);
 }
 
-/* CDタップ */
 cd.onclick = () => {
   cdMini = !cdMini;
   cd.classList.toggle("mini", cdMini);
-  stage.classList.toggle("cd-mini", cdMini); // ← これだけ追加
+  stage.classList.toggle("cd-mini", cdMini);
 };
 
-/* シーク */
 seekbar.oninput = () => seeking = true;
 seekbar.onchange = () => {
   player.seekTo((seekbar.value / 100) * player.getDuration(), true);
@@ -273,13 +326,13 @@ function loop() {
     const cur = player.getCurrentTime();
     const dur = player.getDuration();
     seekbar.value = (cur / dur) * 100;
+    seekbar.style.setProperty("--seek", seekbar.value + "%");
     current.textContent = format(cur);
     duration.textContent = format(dur);
   }
   requestAnimationFrame(loop);
 }
 
-/* 曲操作 */
 function loadTrack(i) {
   index = i;
   stopRotation();
@@ -290,10 +343,10 @@ function loadTrack(i) {
   playing = false;
   playBtn.textContent = "▶";
 }
+
 function next() { loadTrack((index + 1) % album.length); }
 function prev() { loadTrack((index - 1 + album.length) % album.length); }
 
-/* プレイリスト */
 function renderList() {
   playlist.innerHTML = "<h3>アルバム</h3>";
   album.forEach((t, i) => {
@@ -323,4 +376,3 @@ function format(sec) {
 
 </body>
 </html>
-
