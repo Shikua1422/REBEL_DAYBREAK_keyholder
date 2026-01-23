@@ -18,7 +18,7 @@ body {
   position: fixed;
   top: 10px;
   right: 15px;
-  z-index: 20;
+  z-index: 30;
 }
 
 .menu-btn {
@@ -26,7 +26,7 @@ body {
   cursor: pointer;
 }
 
-/* ===== アルバム一覧 ===== */
+/* ===== プレイリスト ===== */
 .playlist {
   position: fixed;
   top: 0;
@@ -35,26 +35,18 @@ body {
   height: 100%;
   background: #181818;
   padding: 20px;
-  box-sizing: border-box;
   transition: right 0.35s ease;
-  z-index: 15;
+  z-index: 25;
 }
 
 .playlist.open {
   right: 0;
 }
 
-.playlist h3 {
-  margin-top: 0;
-  font-size: 16px;
-  margin-bottom: 15px;
-}
-
 .track {
-  padding: 10px 8px;
+  padding: 10px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
 }
 
 .track.active {
@@ -80,13 +72,22 @@ body {
   margin: 20px auto;
 }
 
+/* ===== 動画 ===== */
 .video {
   position: absolute;
-  inset: 0;
-  opacity: 0.15;
+  inset: 20px;
+  opacity: 0.18;
   pointer-events: none;
+  z-index: 1;
 }
 
+.video iframe {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* ← 見切れ防止 */
+}
+
+/* ===== CD ===== */
 .cd {
   position: absolute;
   inset: 0;
@@ -95,14 +96,16 @@ body {
   animation: spin 10s linear infinite;
   animation-play-state: paused;
   cursor: pointer;
-  transition: all 0.4s ease;
+  z-index: 5;
+  transition: all 0.45s ease;
 }
 
+/* ミニCD（左上） */
 .cd.mini {
-  width: 80px;
-  height: 80px;
-  top: -10px;
-  left: -10px;
+  width: 64px;        /* ← さらに小さく */
+  height: 64px;
+  top: -24px;         /* ← 左上に寄せる */
+  left: -24px;
 }
 
 @keyframes spin {
@@ -156,13 +159,9 @@ button {
   <div class="menu-btn" onclick="toggleList()">☰</div>
 </div>
 
-<div class="playlist" id="playlist">
-  <h3>アルバム</h3>
-  <div id="tracks"></div>
-</div>
+<div class="playlist" id="playlist"></div>
 
 <div class="container">
-
   <div class="stage">
     <div id="player" class="video"></div>
     <div id="cd" class="cd"></div>
@@ -176,7 +175,7 @@ button {
     <button id="playBtn" onclick="toggle()">▶</button>
     <button onclick="next()">⏭</button>
 
-    <input type="range" id="seekbar" class="seekbar" min="0" max="100" value="0">
+    <input type="range" id="seekbar" class="seekbar" min="0" max="100">
 
     <div class="time">
       <span id="current">0:00</span>
@@ -199,16 +198,10 @@ let rotationTimer = null;
 let cdMini = false;
 
 const cd = document.getElementById("cd");
-const seekbar = document.getElementById("seekbar");
 const playBtn = document.getElementById("playBtn");
+const seekbar = document.getElementById("seekbar");
 const playlist = document.getElementById("playlist");
-const tracksEl = document.getElementById("tracks");
 
-function isWifi() {
-  return navigator.connection && navigator.connection.effectiveType === "4g";
-}
-
-/* ===== YouTube ===== */
 function onYouTubeIframeAPIReady() {
   player = new YT.Player("player", {
     videoId: album[0].id,
@@ -219,7 +212,6 @@ function onYouTubeIframeAPIReady() {
 
 function onReady() {
   player.setVolume(0);
-  player.setPlaybackQuality(isWifi() ? "hd720" : "small");
   renderList();
   updateInfo();
   loop();
@@ -230,17 +222,13 @@ function onStateChange(e) {
   if (e.data === YT.PlayerState.ENDED) next();
 }
 
-/* ===== 再生 ===== */
-function toggle() {
-  playing ? pause() : play();
-}
-
+/* 再生 */
+function toggle() { playing ? pause() : play(); }
 function play() {
   player.playVideo();
   playing = true;
   playBtn.textContent = "⏸";
 }
-
 function pause() {
   player.pauseVideo();
   stopRotation();
@@ -249,31 +237,26 @@ function pause() {
   playBtn.textContent = "▶";
 }
 
-/* ===== 回転 ===== */
+/* 回転 */
 function startRotation() {
   if (cd.style.animationPlayState === "running") return;
   cd.style.animationPlayState = "running";
   clearTimeout(rotationTimer);
   rotationTimer = setTimeout(() => player.setVolume(100), 300);
 }
-
 function stopRotation() {
   cd.style.animationPlayState = "paused";
   clearTimeout(rotationTimer);
 }
 
+/* CDタップ */
 cd.onclick = () => {
   cdMini = !cdMini;
   cd.classList.toggle("mini", cdMini);
 };
 
-/* ===== シーク ===== */
-seekbar.oninput = () => {
-  seeking = true;
-  const t = (seekbar.value / 100) * player.getDuration();
-  current.textContent = format(t);
-};
-
+/* シーク */
+seekbar.oninput = () => seeking = true;
 seekbar.onchange = () => {
   player.seekTo((seekbar.value / 100) * player.getDuration(), true);
   seeking = false;
@@ -290,7 +273,7 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-/* ===== 曲切替 ===== */
+/* 曲切替 */
 function loadTrack(i) {
   index = i;
   stopRotation();
@@ -301,27 +284,18 @@ function loadTrack(i) {
   playing = false;
   playBtn.textContent = "▶";
 }
+function next() { loadTrack((index + 1) % album.length); }
+function prev() { loadTrack((index - 1 + album.length) % album.length); }
 
-function next() {
-  loadTrack((index + 1) % album.length);
-}
-
-function prev() {
-  loadTrack((index - 1 + album.length) % album.length);
-}
-
-/* ===== リスト ===== */
+/* プレイリスト */
 function renderList() {
-  tracksEl.innerHTML = "";
+  playlist.innerHTML = "<h3>アルバム</h3>";
   album.forEach((t, i) => {
     const div = document.createElement("div");
     div.className = "track" + (i === index ? " active" : "");
     div.innerHTML = `${t.title}<span>${t.artist}</span>`;
-    div.onclick = () => {
-      loadTrack(i);
-      toggleList();
-    };
-    tracksEl.appendChild(div);
+    div.onclick = () => { loadTrack(i); toggleList(); };
+    playlist.appendChild(div);
   });
 }
 
@@ -329,7 +303,6 @@ function toggleList() {
   playlist.classList.toggle("open");
 }
 
-/* ===== util ===== */
 function updateInfo() {
   title.textContent = album[index].title;
   artist.textContent = album[index].artist;
