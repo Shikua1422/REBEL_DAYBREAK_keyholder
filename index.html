@@ -25,39 +25,21 @@ body {
   cursor: pointer;
 }
 
-/* ===== ディスク交換 ===== */
-.eject {
+/* ▼ アルバム切替ボタン（追加） */
+.album-btn {
   position: fixed;
   top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 20px;
-  opacity: 0.6;
-  cursor: pointer;
   z-index: 40;
-}
-.eject:hover { opacity: 1; }
-
-/* ===== ディスク選択 ===== */
-.disk-panel {
-  position: fixed;
-  top: 50px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #181818;
-  border-radius: 10px;
-  padding: 10px;
-  display: none;
-  z-index: 50;
-}
-.disk-panel.open { display: block; }
-.disk-item {
-  padding: 8px 14px;
   cursor: pointer;
-  border-radius: 6px;
+  opacity: 0.7;
 }
-.disk-item:hover {
-  background: #333;
+.album-btn:hover { opacity: 1; }
+.album-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: #aaa;
 }
 
 /* ===== プレイリスト ===== */
@@ -84,6 +66,26 @@ body {
   font-size: 12px;
   color: #aaa;
 }
+
+/* ===== アルバム一覧（下から） ===== */
+.album-sheet {
+  position: fixed;
+  bottom: -100%;
+  left: 0;
+  width: 100%;
+  background: #181818;
+  border-radius: 14px 14px 0 0;
+  padding: 16px;
+  transition: bottom 0.35s ease;
+  z-index: 45;
+}
+.album-sheet.open { bottom: 0; }
+.album-item {
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.album-item:hover { background: #333; }
 
 /* ===== メイン ===== */
 .container {
@@ -154,7 +156,6 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.85;
   position: relative;
 }
 .youtube-icon {
@@ -166,8 +167,9 @@ body {
 }
 
 /* ===== コントロール ===== */
-.controls { margin-top: 18px; }
-
+.controls {
+  margin-top: 18px;
+}
 .control-buttons {
   display: flex;
   justify-content: center;
@@ -175,47 +177,53 @@ body {
   gap: 22px;
   margin-bottom: 10px;
 }
-
 .icon-btn,
 .play-btn {
   background: none;
   border: none;
+  padding: 0;
   cursor: pointer;
 }
-
 .icon-btn svg {
   width: 22px;
   height: 22px;
   fill: #aaa;
 }
-.icon-btn:hover svg { fill: #fff; }
-
 .play-btn {
   width: 56px;
   height: 56px;
   border-radius: 50%;
   background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
-@keyframes glowCycle {
-  0% { box-shadow: 0 0 12px rgba(255,255,255,.7); }
-  100% { box-shadow: 0 0 12px rgba(255,255,255,.7); }
-}
-body.playing .play-btn {
-  animation: glowCycle 6s infinite;
+.play-btn svg {
+  width: 26px;
+  height: 26px;
+  fill: #000;
 }
 
 /* ===== シークバー ===== */
 .seekbar {
   width: 100%;
   height: 4px;
-  background: linear-gradient(
-    to right,
-    #fff 0%,
-    #fff var(--progress,0%),
-    #444 var(--progress,0%),
-    #444 100%
-  );
+  border-radius: 2px;
+  background: linear-gradient(to right,#fff var(--progress,0%),#444 0%);
+}
+.seekbar::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+/* ===== 時間 ===== */
+.time {
+  font-size: 12px;
+  color: #aaa;
+  display: flex;
+  justify-content: space-between;
 }
 </style>
 </head>
@@ -226,10 +234,15 @@ body.playing .play-btn {
   <div class="menu-btn" onclick="toggleList()">☰</div>
 </div>
 
-<div class="eject" onclick="toggleDisk()">⏏️</div>
-<div class="disk-panel" id="diskPanel"></div>
+<!-- アルバム切替ボタン -->
+<div class="album-btn" onclick="toggleAlbumSheet()">
+  <svg viewBox="0 0 24 24"><path d="M5 9h14v2H5zm0 4h14v2H5z"/></svg>
+</div>
 
 <div class="playlist" id="playlist"></div>
+
+<!-- アルバム一覧 -->
+<div class="album-sheet" id="albumSheet"></div>
 
 <div class="container">
   <div class="stage">
@@ -249,104 +262,79 @@ body.playing .play-btn {
 
   <div class="controls">
     <div class="control-buttons">
-      <button class="icon-btn" onclick="prev()">⏮</button>
-      <button class="play-btn" onclick="toggle()">▶</button>
-      <button class="icon-btn" onclick="next()">⏭</button>
+      <button class="icon-btn" onclick="prev()">
+        <svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-8 6 8 6z"/></svg>
+      </button>
+
+      <button class="play-btn" onclick="toggle()">
+        <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      </button>
+
+      <button class="icon-btn" onclick="next()">
+        <svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l8 6-8 6z"/></svg>
+      </button>
     </div>
-    <input type="range" id="seekbar" class="seekbar">
+
+    <input type="range" id="seekbar" class="seekbar" min="0" max="100">
+    <div class="time">
+      <span id="current">0:00</span>
+      <span id="duration">0:00</span>
+    </div>
   </div>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-const albums = [
-  {
-    name: "REBEL DISC 1",
-    tracks: [
-      { id: "HCoTcCMLRsM", title: "Q", artist: "REBEL" },
-      { id: "p8iNb7sTNiY", title: "ロストワンの号哭", artist: "REBEL" },
-      { id: "uC44M7_srjg", title: "DOGLAND", artist: "REBEL" }
-    ]
-  },
-  {
-    name: "REBEL DISC 2",
-    tracks: [
-      { id: "HCoTcCMLRsM", title: "Q (Alt)", artist: "REBEL" }
-    ]
-  }
-];
+const albums = {
+  AlbumA: [
+    { id:"HCoTcCMLRsM", title:"Q", artist:"REBEL" },
+    { id:"p8iNb7sTNiY", title:"ロストワンの号哭", artist:"REBEL" }
+  ],
+  AlbumB: [
+    { id:"uC44M7_srjg", title:"DOGLAND", artist:"REBEL" }
+  ]
+};
 
-let diskIndex = 0;
-let album = albums[0].tracks;
+let currentAlbum = "AlbumA";
+let album = albums[currentAlbum];
 let index = 0;
 let player;
 
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player("player", {
-    videoId: album[0].id,
-    playerVars: { playsinline: 1, controls: 0 },
-    events: { onReady }
+const albumSheet = document.getElementById("albumSheet");
+
+function toggleAlbumSheet(){
+  albumSheet.classList.toggle("open");
+}
+
+function renderAlbums(){
+  albumSheet.innerHTML = "";
+  Object.keys(albums).forEach(name=>{
+    const div=document.createElement("div");
+    div.className="album-item";
+    div.textContent=name;
+    div.onclick=()=>{
+      currentAlbum=name;
+      album=albums[name];
+      loadTrack(0);
+      toggleAlbumSheet();
+    };
+    albumSheet.appendChild(div);
   });
 }
 
-function onReady() {
-  renderList();
-  updateInfo();
-  renderDisks();
-}
-
-function renderDisks() {
-  const p = document.getElementById("diskPanel");
-  p.innerHTML = "";
-  albums.forEach((d, i) => {
-    const div = document.createElement("div");
-    div.className = "disk-item";
-    div.textContent = d.name;
-    div.onclick = () => switchDisk(i);
-    p.appendChild(div);
-  });
-}
-
-function toggleDisk() {
-  document.getElementById("diskPanel").classList.toggle("open");
-}
-
-function switchDisk(i) {
-  diskIndex = i;
-  album = albums[i].tracks;
-  index = 0;
-  player.loadVideoById(album[0].id);
-  updateInfo();
-  renderList();
-  toggleDisk();
-}
-
-function updateInfo() {
-  title.textContent = album[index].title;
-  artist.textContent = album[index].artist;
-  titleLink.href = "https://www.youtube.com/watch?v=" + album[index].id;
-}
-
-function renderList() {
-  playlist.innerHTML = "<h3>アルバム</h3>";
-  album.forEach((t,i)=>{
-    const d=document.createElement("div");
-    d.className="track"+(i===index?" active":"");
-    d.innerHTML=`${t.title}<span>${t.artist}</span>`;
-    d.onclick=()=>loadTrack(i);
-    playlist.appendChild(d);
-  });
+function onYouTubeIframeAPIReady(){
+  player=new YT.Player("player",{videoId:album[0].id});
+  renderAlbums();
 }
 
 function loadTrack(i){
   index=i;
-  player.loadVideoById(album[i].id);
-  updateInfo();
-  renderList();
+  player.loadVideoById(album[index].id);
+  title.textContent=album[index].title;
+  artist.textContent=album[index].artist;
+  titleLink.href="https://www.youtube.com/watch?v="+album[index].id;
 }
-function next(){ loadTrack((index+1)%album.length); }
-function prev(){ loadTrack((index-1+album.length)%album.length); }
-function toggleList(){ playlist.classList.toggle("open"); }
 </script>
 
 </body>
