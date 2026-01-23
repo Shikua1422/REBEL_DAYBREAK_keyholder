@@ -149,14 +149,38 @@ body {
   justify-content: center;
 }
 
-/* ===== 再生中の淡い照らし（色変化） ===== */
+/* ===== 再生中の淡い照らし（強化） ===== */
 @keyframes glowCycle {
-  0%   { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
-  20%  { box-shadow: 0 0 12px rgba(255,80,80,0.6); }
-  40%  { box-shadow: 0 0 14px rgba(120,220,255,0.6); }
-  60%  { box-shadow: 0 0 14px rgba(80,140,255,0.6); }
-  80%  { box-shadow: 0 0 14px rgba(180,120,255,0.6); }
-  100% { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+  0% {
+    box-shadow:
+      0 0 12px rgba(255,255,255,0.7),
+      0 0 28px rgba(255,255,255,0.35);
+  }
+  20% {
+    box-shadow:
+      0 0 14px rgba(255,80,80,0.75),
+      0 0 32px rgba(255,80,80,0.4);
+  }
+  40% {
+    box-shadow:
+      0 0 14px rgba(120,220,255,0.75),
+      0 0 32px rgba(120,220,255,0.4);
+  }
+  60% {
+    box-shadow:
+      0 0 14px rgba(80,140,255,0.75),
+      0 0 32px rgba(80,140,255,0.4);
+  }
+  80% {
+    box-shadow:
+      0 0 14px rgba(180,120,255,0.75),
+      0 0 32px rgba(180,120,255,0.4);
+  }
+  100% {
+    box-shadow:
+      0 0 12px rgba(255,255,255,0.7),
+      0 0 28px rgba(255,255,255,0.35);
+  }
 }
 
 body.playing .play-btn {
@@ -169,7 +193,7 @@ body.playing .play-btn {
   fill: #000;
 }
 
-/* ===== シークバー ===== */
+/* ===== シークバー（滑らか強化） ===== */
 .seekbar {
   width: 100%;
   -webkit-appearance: none;
@@ -183,7 +207,7 @@ body.playing .play-btn {
     #444 var(--progress, 0%),
     #444 100%
   );
-  transition: background 0.12s linear; /* ★カクつき軽減 */
+  transition: background 0.25s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 .seekbar::-webkit-slider-thumb {
   -webkit-appearance: none;
