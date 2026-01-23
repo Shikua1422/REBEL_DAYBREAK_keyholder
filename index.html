@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Album Player</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Now Playing</title>
 
 <style>
 body {
@@ -14,155 +14,99 @@ body {
   overflow: hidden;
 }
 
-/* ===== ヘッダー ===== */
-.header {
+/* ===== UI ===== */
+.menu {
   position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 30;
-}
-
-.menu-btn {
+  top: 12px;
+  right: 12px;
   font-size: 22px;
+  z-index: 20;
   cursor: pointer;
 }
 
-/* ===== アルバムリスト ===== */
-.album-list {
-  position: fixed;
-  top: 0;
-  right: -260px;
-  width: 260px;
-  height: 100%;
-  background: #181818;
-  transition: right .35s ease;
-  z-index: 25;
-  padding: 20px;
-}
-
-.album-list.open {
-  right: 0;
-}
-
-.album-list h3 {
-  margin-top: 0;
-  font-size: 16px;
-}
-
-.album-list ul {
-  list-style: none;
-  padding: 0;
-}
-
-.album-list li {
-  padding: 10px 0;
-  border-bottom: 1px solid #333;
-  cursor: pointer;
-}
-
-.album-list li:hover {
-  opacity: .7;
-}
-
-/* ===== ステージ ===== */
+/* ===== STAGE ===== */
 .stage {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-/* ===== 動画 ===== */
+/* ===== VIDEO ===== */
 .video {
   position: absolute;
-  top: 50%;
-  left: 50%;
   width: 220px;
   height: 124px;
-  transform: translate(-50%, -50%);
-  opacity: 0.22;
-  pointer-events: none;
+  opacity: 0.25;
+  transition: all 0.4s ease;
   z-index: 1;
-  transition: 
-    width .45s ease,
-    height .45s ease,
-    opacity .45s ease;
 }
 
-/* CDがminiのときだけ動画を拡大 */
-.cd.mini ~ .video {
-  width: 300px;
-  height: 170px;
+.video iframe {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+/* CDが前面のときは動画を小さく */
+.stage.cd-front .video {
+  width: 180px;
+  height: 101px;
+  opacity: 0.15;
+}
+
+/* CD mini 時のみ動画を大きく（←今回の追加） */
+.stage.cd-mini .video {
+  width: 340px;
+  height: 191px;
   opacity: 0.35;
 }
 
 /* ===== CD ===== */
 .cd {
-  position: absolute;
-  top: 50%;
-  left: 50%;
   width: 260px;
   height: 260px;
-  transform: translate(-50%, -50%);
   border-radius: 50%;
-  background: url("cd.jpeg") center/cover no-repeat;
+  background: url("cd.jpeg") center / cover no-repeat;
   animation: spin 10s linear infinite;
   animation-play-state: paused;
-  z-index: 10;
-  transition:
-    top .45s ease,
-    left .45s ease,
-    width .45s ease,
-    height .45s ease,
-    transform .45s ease;
-}
-
-.cd.mini {
-  top: 14px;
-  left: 14px;
-  width: 120px;
-  height: 120px;
-  transform: none;
+  z-index: 2;
+  transition: all 0.45s ease;
+  cursor: pointer;
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
-/* ===== コントロール ===== */
+/* CD mini（左上） */
+.cd.mini {
+  position: fixed;
+  top: 8px;          /* ← 前版より少し上 */
+  left: 8px;
+  width: 84px;       /* ← 1回りだけ小さく */
+  height: 84px;
+}
+
+/* ===== CONTROLS ===== */
 .controls {
   position: fixed;
-  bottom: 20px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
   width: 320px;
   text-align: center;
-  z-index: 20;
-}
-
-.title {
-  font-size: 18px;
-}
-
-.artist {
-  font-size: 13px;
-  color: #aaa;
-  margin-bottom: 10px;
-}
-
-.buttons {
-  margin-bottom: 8px;
+  z-index: 10;
 }
 
 button {
-  background: #fff;
-  color: #000;
   border: none;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 14px;
+  border-radius: 50%;
+  padding: 10px 14px;
+  margin: 0 6px;
   cursor: pointer;
-  margin: 0 4px;
 }
 
 .seekbar {
@@ -170,191 +114,139 @@ button {
 }
 
 .time {
-  display: flex;
-  justify-content: space-between;
   font-size: 12px;
   color: #aaa;
-}
-
-/* ===== YouTube iframe ===== */
-#player {
-  width: 100%;
-  height: 100%;
+  display: flex;
+  justify-content: space-between;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-  <div class="menu-btn" onclick="toggleMenu()">☰</div>
-</div>
+<div class="menu">☰</div>
 
-<div class="album-list" id="albumList">
-  <h3>ALBUM</h3>
-  <ul id="trackList"></ul>
-</div>
-
-<div class="stage">
-  <div class="cd" id="cd"></div>
+<div class="stage cd-front" id="stage">
   <div class="video" id="video">
     <div id="player"></div>
   </div>
+  <div class="cd" id="cd"></div>
 </div>
 
 <div class="controls">
-  <div class="title" id="title"></div>
-  <div class="artist" id="artist"></div>
+  <button onclick="prev()">⏮</button>
+  <button id="playBtn" onclick="toggle()">▶</button>
+  <button onclick="next()">⏭</button>
 
-  <div class="buttons">
-    <button onclick="prevTrack()">⏮</button>
-    <button id="playBtn" onclick="togglePlay()">▶</button>
-    <button onclick="nextTrack()">⏭</button>
-  </div>
-
-  <input type="range" min="0" max="100" value="0" id="seekbar" class="seekbar">
+  <input type="range" id="seek" class="seekbar" min="0" max="100" value="0">
 
   <div class="time">
-    <span id="current">0:00</span>
-    <span id="duration">0:00</span>
+    <span id="cur">0:00</span>
+    <span id="dur">0:00</span>
   </div>
 </div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
 const album = [
-  { id: "HCoTcCMLRsM", title: "Q", artist: "REBEL", link: "https://youtu.be/HCoTcCMLRsM" },
-  { id: "p8iNb7sTNiY", title: "ロストワンの号哭", artist: "REBEL", link: "https://youtu.be/p8iNb7sTNiY" },
-  { id: "uC44M7_srjg", title: "DOGLAND", artist: "REBEL", link: "https://youtu.be/uC44M7_srjg" }
+  { id: "HCoTcCMLRsM", title: "Q", artist: "REBEL" },
+  { id: "p8iNb7sTNiY", title: "ロストワンの号哭", artist: "REBEL" },
+  { id: "uC44M7_srjg", title: "DOGLAND", artist: "REBEL" }
 ];
 
-let ytPlayer;
-let currentTrack = 0;
-let isPlaying = false;
+let idx = 0;
+let yt;
+let playing = false;
 let seeking = false;
-let rotationTimer = null;
-let cdMini = false;
 
 const cd = document.getElementById("cd");
+const stage = document.getElementById("stage");
+const seek = document.getElementById("seek");
 const playBtn = document.getElementById("playBtn");
-const seekbar = document.getElementById("seekbar");
 
 function onYouTubeIframeAPIReady() {
-  ytPlayer = new YT.Player("player", {
+  yt = new YT.Player("player", {
     videoId: album[0].id,
-    playerVars: {
-      playsinline: 1,
-      controls: 0,
-      rel: 0
-    },
-    events: {
-      onReady,
-      onStateChange
-    }
+    playerVars: { playsinline: 1, controls: 0, rel: 0 },
+    events: { onReady, onStateChange }
   });
 }
 
 function onReady() {
-  ytPlayer.setVolume(0);
-  updateInfo();
-  updateLoop();
+  yt.setVolume(0);
+  loop();
 }
 
 function onStateChange(e) {
   if (e.data === YT.PlayerState.PLAYING) {
     cd.style.animationPlayState = "running";
-    clearTimeout(rotationTimer);
-    rotationTimer = setTimeout(() => ytPlayer.setVolume(100), 300);
+    setTimeout(() => yt.setVolume(100), 300);
   }
-  if (e.data === YT.PlayerState.ENDED) nextTrack();
+  if (e.data === YT.PlayerState.PAUSED) {
+    cd.style.animationPlayState = "paused";
+  }
+  if (e.data === YT.PlayerState.ENDED) next();
 }
 
-cd.onclick = () => {
-  cdMini = !cdMini;
-  cd.classList.toggle("mini", cdMini);
-};
-
-function togglePlay() {
-  if (isPlaying) {
-    ytPlayer.pauseVideo();
-    cd.style.animationPlayState = "paused";
-    ytPlayer.setVolume(0);
+/* ===== PLAY ===== */
+function toggle() {
+  if (playing) {
+    yt.pauseVideo();
     playBtn.textContent = "▶";
   } else {
-    ytPlayer.playVideo();
+    yt.playVideo();
     playBtn.textContent = "⏸";
   }
-  isPlaying = !isPlaying;
+  playing = !playing;
 }
 
-function nextTrack() {
-  currentTrack = (currentTrack + 1) % album.length;
-  loadTrack();
-}
-
-function prevTrack() {
-  currentTrack = (currentTrack - 1 + album.length) % album.length;
-  loadTrack();
-}
-
-function loadTrack() {
-  cd.style.animationPlayState = "paused";
-  ytPlayer.setVolume(0);
-  ytPlayer.loadVideoById(album[currentTrack].id);
-  isPlaying = false;
+/* ===== TRACK ===== */
+function load() {
+  yt.loadVideoById(album[idx].id);
+  playing = false;
   playBtn.textContent = "▶";
-  updateInfo();
 }
 
-function updateInfo() {
-  title.textContent = album[currentTrack].title;
-  artist.textContent = album[currentTrack].artist;
+function next() {
+  idx = (idx + 1) % album.length;
+  load();
 }
 
-seekbar.addEventListener("input", () => {
-  seeking = true;
-  const t = ytPlayer.getDuration() * (seekbar.value / 100);
-  current.textContent = format(t);
-});
+function prev() {
+  idx = (idx - 1 + album.length) % album.length;
+  load();
+}
 
-seekbar.addEventListener("change", () => {
-  ytPlayer.seekTo(ytPlayer.getDuration() * (seekbar.value / 100), true);
+/* ===== SEEK ===== */
+seek.oninput = () => seeking = true;
+seek.onchange = () => {
+  yt.seekTo((seek.value / 100) * yt.getDuration(), true);
   seeking = false;
-});
+};
 
-function updateLoop() {
-  if (ytPlayer && ytPlayer.getCurrentTime) {
-    const cur = ytPlayer.getCurrentTime();
-    const dur = ytPlayer.getDuration();
-    if (!seeking && dur) seekbar.value = (cur / dur) * 100;
-    current.textContent = format(cur);
-    duration.textContent = format(dur);
+function loop() {
+  if (yt && yt.getCurrentTime) {
+    const d = yt.getDuration() || 0;
+    const c = yt.getCurrentTime();
+    if (!seeking && d) seek.value = (c / d) * 100;
+    document.getElementById("cur").textContent = fmt(c);
+    document.getElementById("dur").textContent = fmt(d);
   }
-  requestAnimationFrame(updateLoop);
+  requestAnimationFrame(loop);
 }
 
-function format(sec) {
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60).toString().padStart(2, "0");
-  return `${m}:${s}`;
+function fmt(s) {
+  const m = Math.floor(s / 60);
+  const ss = Math.floor(s % 60).toString().padStart(2, "0");
+  return `${m}:${ss}`;
 }
 
-function toggleMenu() {
-  document.getElementById("albumList").classList.toggle("open");
-}
-
-/* アルバムリスト生成 */
-const trackList = document.getElementById("trackList");
-album.forEach((t, i) => {
-  const li = document.createElement("li");
-  li.textContent = t.title;
-  li.onclick = () => {
-    currentTrack = i;
-    loadTrack();
-    toggleMenu();
-  };
-  trackList.appendChild(li);
-});
+/* ===== CD TAP ===== */
+cd.onclick = () => {
+  cd.classList.toggle("mini");
+  stage.classList.toggle("cd-mini");
+  stage.classList.toggle("cd-front");
+};
 </script>
 
 </body>
