@@ -148,17 +148,25 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* ===== 再生中の淡い照らし（色変化） ===== */
+@keyframes glowCycle {
+  0%   { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+  20%  { box-shadow: 0 0 12px rgba(255,80,80,0.6); }
+  40%  { box-shadow: 0 0 14px rgba(120,220,255,0.6); }
+  60%  { box-shadow: 0 0 14px rgba(80,140,255,0.6); }
+  80%  { box-shadow: 0 0 14px rgba(180,120,255,0.6); }
+  100% { box-shadow: 0 0 10px rgba(255,255,255,0.6); }
+}
+
+body.playing .play-btn {
+  animation: glowCycle 6s ease-in-out infinite;
+}
+
 .play-btn svg {
   width: 26px;
   height: 26px;
   fill: #000;
-}
-
-/* 再生中：淡く照らす */
-body.playing .play-btn {
-  box-shadow:
-    0 0 10px rgba(255,255,255,0.6),
-    0 0 20px rgba(100,150,255,0.4);
 }
 
 /* ===== シークバー ===== */
@@ -175,6 +183,7 @@ body.playing .play-btn {
     #444 var(--progress, 0%),
     #444 100%
   );
+  transition: background 0.12s linear; /* ★カクつき軽減 */
 }
 .seekbar::-webkit-slider-thumb {
   -webkit-appearance: none;
