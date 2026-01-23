@@ -74,11 +74,6 @@ body {
   width: 300px;
   height: 300px;
   margin: 20px auto;
-  transition: transform .4s ease, opacity .4s ease;
-}
-.stage.swap {
-  transform: scale(0.85);
-  opacity: 0;
 }
 
 /* ===== 動画 ===== */
@@ -161,6 +156,7 @@ body {
   gap: 22px;
   margin-bottom: 10px;
 }
+
 .icon-btn,
 .play-btn {
   background: none;
@@ -168,6 +164,7 @@ body {
   padding: 0;
   cursor: pointer;
 }
+
 .icon-btn svg {
   width: 22px;
   height: 22px;
@@ -175,6 +172,7 @@ body {
   transition: fill 0.2s;
 }
 .icon-btn:hover svg { fill: #fff; }
+
 .play-btn {
   width: 56px;
   height: 56px;
@@ -185,48 +183,14 @@ body {
   justify-content: center;
 }
 
-/* 再生中の照らし */
-@keyframes glowCycle {
-  0% { box-shadow: 0 0 12px rgba(255,255,255,0.7),0 0 28px rgba(255,255,255,0.35); }
-  100% { box-shadow: 0 0 12px rgba(255,255,255,0.7),0 0 28px rgba(255,255,255,0.35); }
-}
 body.playing .play-btn {
-  animation: glowCycle 6s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(255,255,255,0.7);
 }
+
 .play-btn svg {
   width: 26px;
   height: 26px;
   fill: #000;
-}
-
-/* ===== シークバー ===== */
-.seekbar {
-  width: 100%;
-  appearance: none;
-  height: 4px;
-  border-radius: 2px;
-  background: linear-gradient(
-    to right,
-    #fff 0%,
-    #fff var(--progress, 0%),
-    #444 var(--progress, 0%),
-    #444 100%
-  );
-}
-.seekbar::-webkit-slider-thumb {
-  appearance: none;
-  width: 12px;
-  height: 12px;
-  background: #fff;
-  border-radius: 50%;
-  cursor: pointer;
-}
-.time {
-  font-size: 12px;
-  color: #aaa;
-  display: flex;
-  justify-content: space-between;
-  margin-top: 4px;
 }
 
 /* ===== アルバムモーダル ===== */
@@ -238,6 +202,7 @@ body.playing .play-btn {
   z-index: 50;
 }
 .album-modal.open { display: block; }
+
 .album-panel {
   position: absolute;
   bottom: 0;
@@ -247,10 +212,12 @@ body.playing .play-btn {
   padding: 20px;
   animation: slideUp .35s ease;
 }
+
 @keyframes slideUp {
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
 .album-item {
   padding: 12px;
   border-radius: 8px;
@@ -276,7 +243,7 @@ body.playing .play-btn {
 <div class="playlist" id="playlist"></div>
 
 <div class="container">
-  <div class="stage" id="stage">
+  <div class="stage">
     <div id="player" class="video"></div>
     <div id="cd" class="cd"></div>
   </div>
@@ -293,18 +260,18 @@ body.playing .play-btn {
 
   <div class="controls">
     <div class="control-buttons">
-      <button class="icon-btn" onclick="prev()">◀</button>
+      <button class="icon-btn" onclick="prev()">
+        <svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-8 6 8 6z"/></svg>
+      </button>
+
       <button class="play-btn" onclick="toggle()">
         <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
       </button>
-      <button class="icon-btn" onclick="next()">▶</button>
-    </div>
 
-    <input type="range" id="seekbar" class="seekbar" min="0" max="100">
-    <div class="time">
-      <span id="current">0:00</span>
-      <span id="duration">0:00</span>
+      <button class="icon-btn" onclick="next()">
+        <svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l8 6-8 6z"/></svg>
+      </button>
     </div>
   </div>
 </div>
@@ -339,7 +306,8 @@ let albumIndex = 0;
 let trackIndex = 0;
 let player, playing = false;
 
-const stage = document.getElementById("stage");
+const cd = document.getElementById("cd");
+const stage = document.querySelector(".stage");
 const playlist = document.getElementById("playlist");
 const albumModal = document.getElementById("albumModal");
 const albumList = document.getElementById("albumList");
@@ -357,7 +325,6 @@ function onReady() {
   player.setVolume(0);
   renderList();
   updateInfo();
-  loop();
 }
 
 function toggle() { playing ? pause() : play(); }
@@ -375,6 +342,12 @@ function pause() {
   pauseIcon.style.display = "none";
   document.body.classList.remove("playing");
 }
+
+/* CDミニ化 */
+cd.onclick = () => {
+  cd.classList.toggle("mini");
+  stage.classList.toggle("cd-mini");
+};
 
 /* アルバム */
 function openAlbums() {
@@ -395,16 +368,12 @@ function renderAlbums() {
   });
 }
 function switchAlbum(i) {
-  stage.classList.add("swap");
-  setTimeout(() => {
-    albumIndex = i;
-    trackIndex = 0;
-    player.loadVideoById(albums[i].tracks[0].id);
-    updateInfo();
-    renderList();
-    stage.classList.remove("swap");
-    closeAlbums();
-  }, 350);
+  albumIndex = i;
+  trackIndex = 0;
+  player.loadVideoById(albums[i].tracks[0].id);
+  updateInfo();
+  renderList();
+  closeAlbums();
 }
 
 /* プレイリスト */
@@ -440,8 +409,6 @@ function updateInfo() {
   artist.textContent = t.artist;
   titleLink.href = "https://www.youtube.com/watch?v=" + t.id;
 }
-
-function loop() { requestAnimationFrame(loop); }
 </script>
 
 </body>
