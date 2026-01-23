@@ -38,7 +38,6 @@ body {
   transition: right 0.35s ease;
   z-index: 35;
 }
-
 .playlist.open { right: 0; }
 
 .track {
@@ -46,9 +45,7 @@ body {
   border-radius: 6px;
   cursor: pointer;
 }
-
 .track.active { background: #333; }
-
 .track span {
   display: block;
   font-size: 12px;
@@ -79,14 +76,11 @@ body {
   pointer-events: none;
   z-index: 1;
 }
-
 .video iframe {
   width: 100%;
   height: 100%;
-  object-fit: contain;
 }
 
-/* CDミニ時は動画拡大 */
 .stage.cd-mini .video {
   width: 360px;
   height: 202px;
@@ -105,7 +99,6 @@ body {
   transition: all 0.45s ease;
 }
 
-/* ミニCD */
 .cd.mini {
   width: 58px;
   height: 58px;
@@ -119,15 +112,8 @@ body {
 }
 
 /* ===== 曲情報 ===== */
-.title {
-  font-size: 18px;
-  margin-top: 12px;
-}
-
-.artist {
-  font-size: 14px;
-  color: #aaa;
-}
+.title { font-size: 18px; margin-top: 12px; }
+.artist { font-size: 14px; color: #aaa; }
 
 /* ===== コントロール ===== */
 .controls {
@@ -138,38 +124,47 @@ body {
   gap: 14px;
 }
 
-/* ボタン */
+/* ===== ボタン群 ===== */
 .control-buttons {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 18px;
+  gap: 20px;
 }
 
 .control-buttons button {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(6px);
-  color: #fff;
   border: none;
-  font-size: 20px;
   cursor: pointer;
-  transition: transform 0.15s ease, background 0.15s ease;
+  color: #fff;
+  background: linear-gradient(145deg, #2a2a2a, #0f0f0f);
+  box-shadow:
+    4px 4px 8px rgba(0,0,0,0.6),
+    -2px -2px 6px rgba(255,255,255,0.05);
+  transition: all 0.15s ease;
+  font-size: 18px;
 }
 
 .control-buttons button:hover {
-  background: rgba(255,255,255,0.22);
-  transform: scale(1.08);
+  transform: scale(1.1);
 }
 
+/* 再生ボタン（主役） */
 #playBtn {
   width: 64px;
   height: 64px;
   font-size: 26px;
-  background: #fff;
   color: #000;
+  background: linear-gradient(145deg, #ffffff, #cfcfcf);
+}
+
+#playBtn.playing {
+  box-shadow:
+    0 0 20px rgba(255,255,255,0.8),
+    0 0 40px rgba(255,255,255,0.4);
+  transform: scale(1.12);
 }
 
 /* ===== シークバー ===== */
@@ -186,7 +181,6 @@ body {
     #444 100%
   );
   outline: none;
-  cursor: pointer;
 }
 
 .seekbar::-webkit-slider-thumb {
@@ -195,7 +189,6 @@ body {
   height: 14px;
   border-radius: 50%;
   background: #fff;
-  margin-top: -5px;
 }
 
 /* ===== 時間 ===== */
@@ -204,7 +197,6 @@ body {
   color: #888;
   display: flex;
   justify-content: space-between;
-  letter-spacing: 0.5px;
 }
 </style>
 </head>
@@ -287,6 +279,7 @@ function play() {
   player.playVideo();
   playing = true;
   playBtn.textContent = "⏸";
+  playBtn.classList.add("playing");
 }
 
 function pause() {
@@ -295,6 +288,7 @@ function pause() {
   player.setVolume(0);
   playing = false;
   playBtn.textContent = "▶";
+  playBtn.classList.remove("playing");
 }
 
 function startRotation() {
@@ -333,15 +327,19 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+/* ★ 修正ポイント：曲変更時の状態同期 */
 function loadTrack(i) {
   index = i;
   stopRotation();
   player.setVolume(0);
   player.loadVideoById(album[index].id);
+
+  playing = true;
+  playBtn.textContent = "⏸";
+  playBtn.classList.add("playing");
+
   updateInfo();
   renderList();
-  playing = false;
-  playBtn.textContent = "▶";
 }
 
 function next() { loadTrack((index + 1) % album.length); }
