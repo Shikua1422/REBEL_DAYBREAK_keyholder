@@ -20,7 +20,6 @@ body {
   right: 16px;
   z-index: 40;
 }
-
 .menu-btn {
   font-size: 26px;
   cursor: pointer;
@@ -39,7 +38,6 @@ body {
   z-index: 35;
 }
 .playlist.open { right: 0; }
-
 .track {
   padding: 10px;
   border-radius: 6px;
@@ -73,14 +71,10 @@ body {
   width: 220px;
   height: 124px;
   transform: translate(-50%, -50%);
+  opacity: 1;
   pointer-events: none;
   z-index: 1;
 }
-.video iframe {
-  width: 100%;
-  height: 100%;
-}
-
 .stage.cd-mini .video {
   width: 360px;
   height: 202px;
@@ -98,12 +92,11 @@ body {
   z-index: 5;
   transition: all 0.45s ease;
 }
-
 .cd.mini {
   width: 58px;
   height: 58px;
-  top: -56px;
-  left: -24px;
+  top: -50px;
+  left: -22px;
 }
 
 @keyframes spin {
@@ -111,92 +104,93 @@ body {
   to   { transform: rotate(360deg); }
 }
 
-/* ===== 曲情報 ===== */
-.title { font-size: 18px; margin-top: 12px; }
+/* ===== 情報 ===== */
+.title { font-size: 18px; margin-top: 10px; }
 .artist { font-size: 14px; color: #aaa; }
 
-/* ===== コントロール ===== */
+/* ===== Spotify風コントロール ===== */
 .controls {
-  max-width: 320px;
-  margin: 20px auto 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+  margin-top: 18px;
 }
 
-/* ===== ボタン群 ===== */
-.control-buttons {
+.control-row {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 22px;
 }
 
-.control-buttons button {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+/* 共通 */
+.ctrl-btn {
+  background: none;
   border: none;
+  padding: 0;
   cursor: pointer;
+  color: #aaa;
+  transition: color 0.2s, transform 0.2s;
+}
+.ctrl-btn:hover {
   color: #fff;
-  background: linear-gradient(145deg, #2a2a2a, #0f0f0f);
-  box-shadow:
-    4px 4px 8px rgba(0,0,0,0.6),
-    -2px -2px 6px rgba(255,255,255,0.05);
-  transition: all 0.15s ease;
-  font-size: 18px;
+  transform: scale(1.05);
 }
 
-.control-buttons button:hover {
-  transform: scale(1.1);
+/* 再生ボタン（中央） */
+.play-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #1db954;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.play-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: #000;
+}
+.play-btn:hover {
+  transform: scale(1.08);
 }
 
-/* 再生ボタン（主役） */
-#playBtn {
-  width: 64px;
-  height: 64px;
-  font-size: 26px;
-  color: #000;
-  background: linear-gradient(145deg, #ffffff, #cfcfcf);
+/* 前後ボタン */
+.skip svg {
+  width: 26px;
+  height: 26px;
+  fill: currentColor;
 }
 
-#playBtn.playing {
-  box-shadow:
-    0 0 20px rgba(255,255,255,0.8),
-    0 0 40px rgba(255,255,255,0.4);
-  transform: scale(1.12);
-}
-
-/* ===== シークバー ===== */
+/* シークバー */
 .seekbar {
-  -webkit-appearance: none;
   width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  background: linear-gradient(
-    to right,
-    #fff 0%,
-    #fff var(--seek, 0%),
-    #444 var(--seek, 0%),
-    #444 100%
-  );
-  outline: none;
+  margin-top: 16px;
+  -webkit-appearance: none;
+  background: transparent;
 }
-
+.seekbar::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #444;
+  border-radius: 2px;
+}
 .seekbar::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
+  background: #1db954;
   border-radius: 50%;
-  background: #fff;
+  margin-top: -4px;
+}
+.seekbar:hover::-webkit-slider-thumb {
+  background: #1ed760;
 }
 
-/* ===== 時間 ===== */
+/* 時間 */
 .time {
-  font-size: 11px;
-  color: #888;
+  font-size: 12px;
+  color: #aaa;
   display: flex;
   justify-content: space-between;
+  margin-top: 4px;
 }
 </style>
 </head>
@@ -219,14 +213,23 @@ body {
   <div class="artist" id="artist"></div>
 
   <div class="controls">
-    <div class="control-buttons">
-      <button onclick="prev()">⏮</button>
-      <button id="playBtn" onclick="toggle()">▶</button>
-      <button onclick="next()">⏭</button>
+    <div class="control-row">
+      <button class="ctrl-btn skip" onclick="prev()">
+        <svg viewBox="0 0 24 24"><path d="M6 5v14l8.5-7zM15 5h3v14h-3z"/></svg>
+      </button>
+
+      <button class="play-btn" id="playBtn" onclick="toggle()">
+        <svg id="playIcon" viewBox="0 0 24 24">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+      </button>
+
+      <button class="ctrl-btn skip" onclick="next()">
+        <svg viewBox="0 0 24 24"><path d="M18 5v14l-8.5-7zM6 5h3v14H6z"/></svg>
+      </button>
     </div>
 
     <input type="range" id="seekbar" class="seekbar" min="0" max="100">
-
     <div class="time">
       <span id="current">0:00</span>
       <span id="duration">0:00</span>
@@ -248,7 +251,7 @@ let rotationTimer = null;
 let cdMini = false;
 
 const cd = document.getElementById("cd");
-const playBtn = document.getElementById("playBtn");
+const playIcon = document.getElementById("playIcon");
 const seekbar = document.getElementById("seekbar");
 const playlist = document.getElementById("playlist");
 const stage = document.querySelector(".stage");
@@ -278,8 +281,7 @@ function toggle() { playing ? pause() : play(); }
 function play() {
   player.playVideo();
   playing = true;
-  playBtn.textContent = "⏸";
-  playBtn.classList.add("playing");
+  playIcon.innerHTML = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
 }
 
 function pause() {
@@ -287,28 +289,29 @@ function pause() {
   stopRotation();
   player.setVolume(0);
   playing = false;
-  playBtn.textContent = "▶";
-  playBtn.classList.remove("playing");
+  playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
 }
 
+/* 回転 */
 function startRotation() {
   if (cd.style.animationPlayState === "running") return;
   cd.style.animationPlayState = "running";
   clearTimeout(rotationTimer);
   rotationTimer = setTimeout(() => player.setVolume(100), 300);
 }
-
 function stopRotation() {
   cd.style.animationPlayState = "paused";
   clearTimeout(rotationTimer);
 }
 
+/* CDタップ */
 cd.onclick = () => {
   cdMini = !cdMini;
   cd.classList.toggle("mini", cdMini);
   stage.classList.toggle("cd-mini", cdMini);
 };
 
+/* シーク */
 seekbar.oninput = () => seeking = true;
 seekbar.onchange = () => {
   player.seekTo((seekbar.value / 100) * player.getDuration(), true);
@@ -320,31 +323,27 @@ function loop() {
     const cur = player.getCurrentTime();
     const dur = player.getDuration();
     seekbar.value = (cur / dur) * 100;
-    seekbar.style.setProperty("--seek", seekbar.value + "%");
     current.textContent = format(cur);
     duration.textContent = format(dur);
   }
   requestAnimationFrame(loop);
 }
 
-/* ★ 修正ポイント：曲変更時の状態同期 */
+/* 曲操作 */
 function loadTrack(i) {
   index = i;
   stopRotation();
   player.setVolume(0);
   player.loadVideoById(album[index].id);
-
-  playing = true;
-  playBtn.textContent = "⏸";
-  playBtn.classList.add("playing");
-
   updateInfo();
   renderList();
+  playing = false;
+  playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
 }
-
 function next() { loadTrack((index + 1) % album.length); }
 function prev() { loadTrack((index - 1 + album.length) % album.length); }
 
+/* プレイリスト */
 function renderList() {
   playlist.innerHTML = "<h3>アルバム</h3>";
   album.forEach((t, i) => {
