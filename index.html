@@ -149,7 +149,7 @@ body {
   justify-content: center;
 }
 
-/* ===== 再生中の淡い照らし（青のみ視認性UP） ===== */
+/* ===== 再生中の淡い照らし ===== */
 @keyframes glowCycle {
   0% {
     box-shadow: 0 0 12px rgba(255,255,255,0.7),
@@ -299,7 +299,13 @@ function onReady() {
 }
 
 function onStateChange(e) {
-  if (e.data === YT.PlayerState.PLAYING) startRotation();
+  if (e.data === YT.PlayerState.PLAYING) {
+    startRotation();
+    playing = true;
+    playIcon.style.display = "none";
+    pauseIcon.style.display = "block";
+    document.body.classList.add("playing");
+  }
   if (e.data === YT.PlayerState.ENDED) next();
 }
 
