@@ -87,20 +87,12 @@ body {
   object-fit: contain;
 }
 
-/* CDが前面のときは動画を小さく */
-.stage.cd-front .video {
-  width: 180px;
-  height: 101px;
-  opacity: 0.15;
-}
-
-/* CD mini 時のみ動画を大きく（←今回の追加） */
+/* CDがミニの時だけ動画を大きくする（追加） */
 .stage.cd-mini .video {
-  width: 340px;
-  height: 191px;
-  opacity: 0.35;
+  width: 360px;
+  height: 202px; /* 16:9維持 */
+  opacity: 0.28;
 }
-
 
 /* ===== CD ===== */
 .cd {
@@ -211,6 +203,7 @@ const cd = document.getElementById("cd");
 const playBtn = document.getElementById("playBtn");
 const seekbar = document.getElementById("seekbar");
 const playlist = document.getElementById("playlist");
+const stage = document.querySelector(".stage");
 
 function onYouTubeIframeAPIReady() {
   player = new YT.Player("player", {
@@ -265,6 +258,7 @@ function stopRotation() {
 cd.onclick = () => {
   cdMini = !cdMini;
   cd.classList.toggle("mini", cdMini);
+  stage.classList.toggle("cd-mini", cdMini); // ← これだけ追加
 };
 
 /* シーク */
@@ -325,14 +319,6 @@ function format(sec) {
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
-
-/* ===== CD TAP ===== */
-cd.onclick = () => {
-  cd.classList.toggle("mini");
-  stage.classList.toggle("cd-mini");
-  stage.classList.toggle("cd-front");
-};
-
 </script>
 
 </body>
