@@ -94,13 +94,13 @@ body {
 .cd.mini {
   width: 58px;
   height: 58px;
-  top: -50px;
-  left: -22px;
+  top: -60px;
+  left: -30px;
 }
 
 @keyframes spin {
   from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* ===== 情報 ===== */
@@ -108,95 +108,73 @@ body {
 .artist { font-size: 14px; color: #aaa; }
 
 /* ===== コントロール ===== */
-.controls { margin-top: 18px; }
+.controls {
+  margin-top: 18px;
+}
 
-.control-row {
+.control-buttons {
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 22px;
+  margin-bottom: 10px;
 }
 
-/* モノクロボタン */
-.ctrl-btn {
+.icon-btn,
+.play-btn {
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
-  color: #aaa;
-  transition: color 0.2s, transform 0.2s;
-}
-.ctrl-btn:hover {
-  color: #fff;
-  transform: scale(1.05);
-}
-.ctrl-btn svg {
-  width: 26px;
-  height: 26px;
-  fill: currentColor;
 }
 
-/* ===== 再生ボタン＋リング ===== */
-.play-wrap {
-  position: relative;
-  width: 56px;
-  height: 56px;
+.icon-btn svg {
+  width: 22px;
+  height: 22px;
+  fill: #aaa;
+  transition: fill 0.2s;
+}
+.icon-btn:hover svg {
+  fill: #fff;
 }
 
+/* 再生ボタン */
 .play-btn {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: #000;
-  border: 1px solid #fff;
+  background: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
 }
 .play-btn svg {
-  width: 22px;
-  height: 22px;
-  fill: #fff;
+  width: 26px;
+  height: 26px;
+  fill: #000;
 }
 
-/* リング */
-.play-ring {
-  position: absolute;
-  inset: -6px;
-  display: none;
-}
-.playing .play-ring {
-  display: block;
-  animation:
-    spin 2s linear infinite,
-    ringColor 10s linear infinite;
-}
-.play-ring circle {
-  fill: none;
-  stroke-width: 3;
-}
-
-@keyframes ringColor {
-  0%   { stroke: #fff; }
-  20%  { stroke: red; }
-  40%  { stroke: #7fffd4; }
-  60%  { stroke: #1e90ff; }
-  80%  { stroke: #9b59b6; }
-  100% { stroke: #fff; }
+/* 再生中：淡く照らす */
+body.playing .play-btn {
+  box-shadow:
+    0 0 10px rgba(255,255,255,0.6),
+    0 0 20px rgba(100,150,255,0.4);
 }
 
 /* ===== シークバー ===== */
 .seekbar {
   width: 100%;
-  margin-top: 16px;
   -webkit-appearance: none;
-  background: transparent;
-}
-.seekbar::-webkit-slider-runnable-track {
+  appearance: none;
   height: 4px;
-  background: #444;
   border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #fff 0%,
+    #fff var(--progress, 0%),
+    #444 var(--progress, 0%),
+    #444 100%
+  );
 }
 .seekbar::-webkit-slider-thumb {
   -webkit-appearance: none;
@@ -204,9 +182,10 @@ body {
   height: 12px;
   background: #fff;
   border-radius: 50%;
-  margin-top: -4px;
+  cursor: pointer;
 }
 
+/* 時間 */
 .time {
   font-size: 12px;
   color: #aaa;
@@ -235,27 +214,18 @@ body {
   <div class="artist" id="artist"></div>
 
   <div class="controls">
-    <div class="control-row">
-      <!-- 戻し -->
-      <button class="ctrl-btn" onclick="prev()">
-        <svg viewBox="0 0 24 24"><path d="M18 5v14l-8.5-7zM6 5h3v14H6z"/></svg>
+    <div class="control-buttons">
+      <button class="icon-btn" onclick="prev()">
+        <svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-8 6 8 6z"/></svg>
       </button>
 
-      <!-- 再生 -->
-      <div class="play-wrap" id="playWrap">
-        <svg class="play-ring" viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="46"/>
-        </svg>
-        <button class="play-btn" onclick="toggle()">
-          <svg id="playIcon" viewBox="0 0 24 24">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-        </button>
-      </div>
+      <button class="play-btn" onclick="toggle()">
+        <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <svg id="pauseIcon" viewBox="0 0 24 24" style="display:none"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>
+      </button>
 
-      <!-- 送り -->
-      <button class="ctrl-btn" onclick="next()">
-        <svg viewBox="0 0 24 24"><path d="M6 5v14l8.5-7zM15 5h3v14h-3z"/></svg>
+      <button class="icon-btn" onclick="next()">
+        <svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l8 6-8 6z"/></svg>
       </button>
     </div>
 
@@ -281,11 +251,11 @@ let rotationTimer = null;
 let cdMini = false;
 
 const cd = document.getElementById("cd");
-const stage = document.querySelector(".stage");
 const playIcon = document.getElementById("playIcon");
-const playWrap = document.getElementById("playWrap");
+const pauseIcon = document.getElementById("pauseIcon");
 const seekbar = document.getElementById("seekbar");
 const playlist = document.getElementById("playlist");
+const stage = document.querySelector(".stage");
 
 function onYouTubeIframeAPIReady() {
   player = new YT.Player("player", {
@@ -312,8 +282,9 @@ function toggle() { playing ? pause() : play(); }
 function play() {
   player.playVideo();
   playing = true;
-  playWrap.classList.add("playing");
-  playIcon.innerHTML = '<path d="M6 5h4v14H6zm8 0h4v14h-4z"/>';
+  playIcon.style.display = "none";
+  pauseIcon.style.display = "block";
+  document.body.classList.add("playing");
 }
 
 function pause() {
@@ -321,8 +292,9 @@ function pause() {
   stopRotation();
   player.setVolume(0);
   playing = false;
-  playWrap.classList.remove("playing");
-  playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+  playIcon.style.display = "block";
+  pauseIcon.style.display = "none";
+  document.body.classList.remove("playing");
 }
 
 /* 回転 */
@@ -345,23 +317,25 @@ cd.onclick = () => {
 };
 
 /* シーク */
-seekbar.oninput = () => seeking = true;
+seekbar.oninput = () => {
+  seeking = true;
+  seekbar.style.setProperty("--progress", seekbar.value + "%");
+};
 seekbar.onchange = () => {
   player.seekTo((seekbar.value / 100) * player.getDuration(), true);
   seeking = false;
 };
 
 function loop() {
-  if (!player || seeking) return requestAnimationFrame(loop);
-
-  const dur = player.getDuration();
-  if (!dur) return requestAnimationFrame(loop);
-
-  const cur = player.getCurrentTime();
-  seekbar.value = (cur / dur) * 100;
-  current.textContent = format(cur);
-  duration.textContent = format(dur);
-
+  if (player && player.getCurrentTime && !seeking) {
+    const cur = player.getCurrentTime();
+    const dur = player.getDuration();
+    const percent = (cur / dur) * 100;
+    seekbar.value = percent;
+    seekbar.style.setProperty("--progress", percent + "%");
+    current.textContent = format(cur);
+    duration.textContent = format(dur);
+  }
   requestAnimationFrame(loop);
 }
 
@@ -374,8 +348,9 @@ function loadTrack(i) {
   updateInfo();
   renderList();
   playing = false;
-  playWrap.classList.remove("playing");
-  playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+  playIcon.style.display = "block";
+  pauseIcon.style.display = "none";
+  document.body.classList.remove("playing");
 }
 function next() { loadTrack((index + 1) % album.length); }
 function prev() { loadTrack((index - 1 + album.length) % album.length); }
