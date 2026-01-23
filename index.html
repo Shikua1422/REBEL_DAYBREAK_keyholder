@@ -11,23 +11,98 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
   background: #111;
   color: #fff;
+}
+
+/* ===== ヘッダー ===== */
+.header {
+  position: fixed;
+  top: 10px;
+  right: 15px;
+  z-index: 20;
+}
+
+.menu-btn {
+  font-size: 26px;
+  cursor: pointer;
+}
+
+/* ===== アルバム一覧 ===== */
+.playlist {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 260px;
+  height: 100%;
+  background: #181818;
+  padding: 20px;
+  box-sizing: border-box;
+  transition: right 0.35s ease;
+  z-index: 15;
+}
+
+.playlist.open {
+  right: 0;
+}
+
+.playlist h3 {
+  margin-top: 0;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.track {
+  padding: 10px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.track.active {
+  background: #333;
+}
+
+.track span {
+  display: block;
+  font-size: 12px;
+  color: #aaa;
+}
+
+/* ===== メイン ===== */
+.container {
+  padding: 40px 15px 20px;
   text-align: center;
 }
 
-.container {
-  padding: 30px 15px;
+.stage {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 20px auto;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  opacity: 0.15;
+  pointer-events: none;
 }
 
 .cd {
-  width: 260px;
-  height: 260px;
-  margin: 30px auto;
+  position: absolute;
+  inset: 0;
   border-radius: 50%;
-  background-image: url("cd.jpeg");
-  background-size: cover;
-  background-position: center;
+  background: url("cd.jpeg") center/cover no-repeat;
   animation: spin 10s linear infinite;
   animation-play-state: paused;
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+
+.cd.mini {
+  width: 80px;
+  height: 80px;
+  top: -10px;
+  left: -10px;
 }
 
 @keyframes spin {
@@ -35,78 +110,73 @@ body {
   to { transform: rotate(360deg); }
 }
 
-.title { font-size: 20px; }
-.artist { font-size: 14px; color: #aaa; margin-bottom: 20px; }
+.title {
+  font-size: 18px;
+  margin-top: 10px;
+}
+
+.artist {
+  font-size: 14px;
+  color: #aaa;
+}
 
 .controls {
   max-width: 320px;
-  margin: 20px auto 0;
-}
-
-.buttons {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin-bottom: 10px;
+  margin: 15px auto 0;
 }
 
 button {
   background: #fff;
   color: #000;
   border: none;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 20px;
   font-size: 14px;
+  margin: 0 4px;
   cursor: pointer;
 }
 
 .seekbar {
   width: 100%;
+  margin-top: 10px;
 }
 
 .time {
   font-size: 12px;
   color: #aaa;
-  margin-top: 4px;
   display: flex;
   justify-content: space-between;
-}
-
-/* ほぼ見えないYouTube */
-.player {
-  position: fixed;
-  right: 6px;
-  bottom: 6px;
-  width: 16px;
-  height: 9px;
-  opacity: 0.05;
-  pointer-events: none;
 }
 </style>
 </head>
 
 <body>
 
+<div class="header">
+  <div class="menu-btn" onclick="toggleList()">☰</div>
+</div>
+
+<div class="playlist" id="playlist">
+  <h3>アルバム</h3>
+  <div id="tracks"></div>
+</div>
+
 <div class="container">
-  <div class="cd" id="cd"></div>
-  <div class="title"></div>
-  <div class="artist"></div>
+
+  <div class="stage">
+    <div id="player" class="video"></div>
+    <div id="cd" class="cd"></div>
+  </div>
+
+  <div class="title" id="title"></div>
+  <div class="artist" id="artist"></div>
 
   <div class="controls">
-    <div class="buttons">
-      <button onclick="prevTrack()">⏮</button>
-      <button id="playBtn" onclick="togglePlay()">▶</button>
-      <button onclick="nextTrack()">⏭</button>
-    </div>
+    <button onclick="prev()">⏮</button>
+    <button id="playBtn" onclick="toggle()">▶</button>
+    <button onclick="next()">⏭</button>
 
-    <input
-      type="range"
-      min="0"
-      max="100"
-      value="0"
-      class="seekbar"
-      id="seekbar"
-    >
+    <input type="range" id="seekbar" class="seekbar" min="0" max="100" value="0">
 
     <div class="time">
       <span id="current">0:00</span>
@@ -115,147 +185,156 @@ button {
   </div>
 </div>
 
-<div id="player" class="player"></div>
-
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-let ytPlayer;
-let duration = 0;
-let seeking = false;
-let isPlaying = false;
-
-let rotationTimer = null;
-let currentTrack = 0;
-
-/* アルバム */
 const album = [
   { id: "HCoTcCMLRsM", title: "Q", artist: "REBEL" },
   { id: "p8iNb7sTNiY", title: "ロストワンの号哭", artist: "REBEL" },
   { id: "uC44M7_srjg", title: "DOGLAND", artist: "REBEL" }
 ];
 
+let player, index = 0;
+let playing = false, seeking = false;
+let rotationTimer = null;
+let cdMini = false;
+
 const cd = document.getElementById("cd");
 const seekbar = document.getElementById("seekbar");
 const playBtn = document.getElementById("playBtn");
+const playlist = document.getElementById("playlist");
+const tracksEl = document.getElementById("tracks");
 
-/* YouTube */
+function isWifi() {
+  return navigator.connection && navigator.connection.effectiveType === "4g";
+}
+
+/* ===== YouTube ===== */
 function onYouTubeIframeAPIReady() {
-  ytPlayer = new YT.Player("player", {
+  player = new YT.Player("player", {
     videoId: album[0].id,
-    playerVars: {
-      playsinline: 1,
-      controls: 0,
-      rel: 0
-    },
-    events: {
-      onReady,
-      onStateChange
-    }
+    playerVars: { playsinline: 1, controls: 0 },
+    events: { onReady, onStateChange }
   });
 }
 
 function onReady() {
-  ytPlayer.setVolume(0);
-  updateTrackInfo();
-  updateLoop();
+  player.setVolume(0);
+  player.setPlaybackQuality(isWifi() ? "hd720" : "small");
+  renderList();
+  updateInfo();
+  loop();
 }
 
 function onStateChange(e) {
-  if (e.data === YT.PlayerState.PLAYING) {
-    isPlaying = true;
-    playBtn.textContent = "⏸";
-    startRotation();
-  }
-
-  if (e.data === YT.PlayerState.PAUSED) {
-    isPlaying = false;
-    playBtn.textContent = "▶";
-    stopRotation();
-  }
-
-  if (e.data === YT.PlayerState.ENDED) {
-    nextTrack();
-  }
+  if (e.data === YT.PlayerState.PLAYING) startRotation();
+  if (e.data === YT.PlayerState.ENDED) next();
 }
 
-/* 再生制御 */
-function togglePlay() {
-  if (isPlaying) ytPlayer.pauseVideo();
-  else ytPlayer.playVideo();
+/* ===== 再生 ===== */
+function toggle() {
+  playing ? pause() : play();
 }
 
-/* 回転 */
+function play() {
+  player.playVideo();
+  playing = true;
+  playBtn.textContent = "⏸";
+}
+
+function pause() {
+  player.pauseVideo();
+  stopRotation();
+  player.setVolume(0);
+  playing = false;
+  playBtn.textContent = "▶";
+}
+
+/* ===== 回転 ===== */
 function startRotation() {
   if (cd.style.animationPlayState === "running") return;
   cd.style.animationPlayState = "running";
-
   clearTimeout(rotationTimer);
-  rotationTimer = setTimeout(() => {
-    ytPlayer.setVolume(100);
-  }, 300);
+  rotationTimer = setTimeout(() => player.setVolume(100), 300);
 }
 
 function stopRotation() {
   cd.style.animationPlayState = "paused";
   clearTimeout(rotationTimer);
-  ytPlayer.setVolume(0);
 }
 
-/* シーク */
-seekbar.addEventListener("input", () => {
+cd.onclick = () => {
+  cdMini = !cdMini;
+  cd.classList.toggle("mini", cdMini);
+};
+
+/* ===== シーク ===== */
+seekbar.oninput = () => {
   seeking = true;
-  const t = (seekbar.value / 100) * duration;
-  document.getElementById("current").textContent = format(t);
-});
+  const t = (seekbar.value / 100) * player.getDuration();
+  current.textContent = format(t);
+};
 
-seekbar.addEventListener("change", () => {
-  const t = (seekbar.value / 100) * duration;
-  ytPlayer.seekTo(t, true);
+seekbar.onchange = () => {
+  player.seekTo((seekbar.value / 100) * player.getDuration(), true);
   seeking = false;
-});
+};
 
-/* 時間更新 */
-function updateLoop() {
-  if (ytPlayer && ytPlayer.getCurrentTime) {
-    duration = ytPlayer.getDuration() || duration;
-    const cur = ytPlayer.getCurrentTime();
-
-    if (!seeking && duration) {
-      seekbar.value = (cur / duration) * 100;
-    }
-
-    document.getElementById("current").textContent = format(cur);
-    document.getElementById("duration").textContent = format(duration);
+function loop() {
+  if (player && player.getCurrentTime && !seeking) {
+    const cur = player.getCurrentTime();
+    const dur = player.getDuration();
+    seekbar.value = (cur / dur) * 100;
+    current.textContent = format(cur);
+    duration.textContent = format(dur);
   }
-  requestAnimationFrame(updateLoop);
+  requestAnimationFrame(loop);
 }
 
-/* 曲切替 */
-function nextTrack() {
-  currentTrack = (currentTrack + 1) % album.length;
-  loadTrack();
-}
-
-function prevTrack() {
-  currentTrack =
-    (currentTrack - 1 + album.length) % album.length;
-  loadTrack();
-}
-
-function loadTrack() {
+/* ===== 曲切替 ===== */
+function loadTrack(i) {
+  index = i;
   stopRotation();
-  ytPlayer.loadVideoById(album[currentTrack].id);
-  updateTrackInfo();
+  player.setVolume(0);
+  player.loadVideoById(album[index].id);
+  updateInfo();
+  renderList();
+  playing = false;
   playBtn.textContent = "▶";
 }
 
-/* UI更新 */
-function updateTrackInfo() {
-  document.querySelector(".title").textContent = album[currentTrack].title;
-  document.querySelector(".artist").textContent = album[currentTrack].artist;
+function next() {
+  loadTrack((index + 1) % album.length);
 }
 
-/* util */
+function prev() {
+  loadTrack((index - 1 + album.length) % album.length);
+}
+
+/* ===== リスト ===== */
+function renderList() {
+  tracksEl.innerHTML = "";
+  album.forEach((t, i) => {
+    const div = document.createElement("div");
+    div.className = "track" + (i === index ? " active" : "");
+    div.innerHTML = `${t.title}<span>${t.artist}</span>`;
+    div.onclick = () => {
+      loadTrack(i);
+      toggleList();
+    };
+    tracksEl.appendChild(div);
+  });
+}
+
+function toggleList() {
+  playlist.classList.toggle("open");
+}
+
+/* ===== util ===== */
+function updateInfo() {
+  title.textContent = album[index].title;
+  artist.textContent = album[index].artist;
+}
+
 function format(sec) {
   const m = Math.floor(sec / 60);
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
