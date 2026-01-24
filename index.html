@@ -214,19 +214,253 @@ body {
 }
 
 /* ===== 再生中の淡い照らし ===== */
-@keyframes glowCycle {
-  0% { box-shadow: 0 0 12px rgba(255,255,255,0.7),0 0 28px rgba(255,255,255,0.35); }
-  20% { box-shadow: 0 0 14px rgba(255,80,80,0.75),0 0 32px rgba(255,80,80,0.4); }
-  40% { box-shadow: 0 0 14px rgba(120,220,255,0.75),0 0 32px rgba(120,220,255,0.4); }
-  60% { box-shadow: 0 0 16px rgba(100,180,255,0.85),0 0 40px rgba(100,180,255,0.5); }
-  80% { box-shadow: 0 0 14px rgba(180,120,255,0.75),0 0 32px rgba(180,120,255,0.4); }
-  100% { box-shadow: 0 0 12px rgba(255,255,255,0.7),0 0 28px rgba(255,255,255,0.35); }
+@keyframes glowCycle-rebel {
+  0% {
+    box-shadow:
+      0 0 12px rgba(255,255,255,0.65),
+      0 0 26px rgba(255,255,255,0.3);
+  }
+  20% {
+    box-shadow:
+      0 0 16px rgba(255,60,60,0.85),
+      0 0 36px rgba(255,60,60,0.45);
+  }
+  40% {
+    box-shadow:
+      0 0 14px rgba(80,160,255,0.85),
+      0 0 34px rgba(80,160,255,0.45);
+  }
+  60% {
+    box-shadow:
+      0 0 18px rgba(120,200,255,0.95),
+      0 0 46px rgba(120,200,255,0.55);
+  }
+  80% {
+    box-shadow:
+      0 0 16px rgba(200,100,255,0.85),
+      0 0 38px rgba(200,100,255,0.45);
+  }
+  100% {
+    box-shadow:
+      0 0 12px rgba(255,255,255,0.65),
+      0 0 26px rgba(255,255,255,0.3);
+  }
 }
 
-body.playing .play-btn {
-  animation: glowCycle 6s ease-in-out infinite;
+@keyframes glowCycle-forte {
+  0% {
+    box-shadow:
+      0 0 12px rgba(255,80,80,0.6),
+      0 0 26px rgba(255,80,80,0.3);
+  }
+  25% {
+    box-shadow:
+      0 0 16px rgba(255,60,60,0.85),
+      0 0 38px rgba(255,60,60,0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(255,40,40,0.95),
+      0 0 48px rgba(255,40,40,0.55);
+  }
+  75% {
+    box-shadow:
+      0 0 16px rgba(255,60,60,0.85),
+      0 0 38px rgba(255,60,60,0.45);
+  }
+  100% {
+    box-shadow:
+      0 0 12px rgba(255,80,80,0.6),
+      0 0 26px rgba(255,80,80,0.3);
+  }
 }
 
+@keyframes glowCycle-aoru {
+  0% {
+    box-shadow:
+      0 0 12px rgba(120,200,255,0.65),
+      0 0 26px rgba(120,200,255,0.35);
+  }
+  25% {
+    box-shadow:
+      0 0 16px rgba(90,180,255,0.85),
+      0 0 40px rgba(90,180,255,0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(160,220,255,0.95),
+      0 0 52px rgba(160,220,255,0.6);
+  }
+  75% {
+    box-shadow:
+      0 0 16px rgba(90,180,255,0.85),
+      0 0 40px rgba(90,180,255,0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 12px rgba(120,200,255,0.65),
+      0 0 26px rgba(120,200,255,0.35);
+  }
+}
+
+@keyframes glowCycle-riwon {
+  0% {
+    box-shadow:
+      0 0 12px rgba(170,120,255,0.65),
+      0 0 26px rgba(170,120,255,0.35);
+  }
+  25% {
+    box-shadow:
+      0 0 16px rgba(150,90,255,0.85),
+      0 0 40px rgba(150,90,255,0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(200,150,255,0.95),
+      0 0 52px rgba(200,150,255,0.6);
+  }
+  75% {
+    box-shadow:
+      0 0 16px rgba(150,90,255,0.85),
+      0 0 40px rgba(150,90,255,0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 12px rgba(170,120,255,0.65),
+      0 0 26px rgba(170,120,255,0.35);
+  }
+}
+
+@keyframes glowCycle-xea {
+  0% {
+    box-shadow:
+      0 0 10px rgba(255,255,255,0.5),
+      0 0 22px rgba(255,255,255,0.25);
+  }
+  25% {
+    box-shadow:
+      0 0 14px rgba(255,255,255,0.7),
+      0 0 32px rgba(255,255,255,0.4);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(255,255,255,0.9),
+      0 0 44px rgba(255,255,255,0.55);
+  }
+  75% {
+    box-shadow:
+      0 0 14px rgba(255,255,255,0.7),
+      0 0 32px rgba(255,255,255,0.4);
+  }
+  100% {
+    box-shadow:
+      0 0 10px rgba(255,255,255,0.5),
+      0 0 22px rgba(255,255,255,0.25);
+  }
+}
+
+@keyframes glowCycle-shinoyu {
+  0% {
+    box-shadow:
+      0 0 12px rgba(140,230,255,0.65),
+      0 0 26px rgba(140,230,255,0.35);
+  }
+  25% {
+    box-shadow:
+      0 0 16px rgba(110,215,255,0.85),
+      0 0 40px rgba(110,215,255,0.5);
+  }
+  50% {
+    box-shadow:
+      0 0 20px rgba(180,245,255,0.95),
+      0 0 52px rgba(180,245,255,0.6);
+  }
+  75% {
+    box-shadow:
+      0 0 16px rgba(110,215,255,0.85),
+      0 0 40px rgba(110,215,255,0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 12px rgba(140,230,255,0.65),
+      0 0 26px rgba(140,230,255,0.35);
+  }
+}
+
+@keyframes glowCycle-forxea {
+  0% {
+    box-shadow:
+      0 0 14px rgba(255,70,70,0.8),
+      0 0 36px rgba(255,70,70,0.45);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(255,255,255,0.9),
+      0 0 48px rgba(255,255,255,0.55);
+  }
+  100% {
+    box-shadow:
+      0 0 14px rgba(255,70,70,0.8),
+      0 0 36px rgba(255,70,70,0.45);
+  }
+}
+
+@keyframes glowCycle-idol {
+  0% {
+    box-shadow:
+      0 0 14px rgba(140,230,255,0.75),
+      0 0 34px rgba(140,230,255,0.4);
+  }
+  33% {
+    box-shadow:
+      0 0 18px rgba(100,180,255,0.9),
+      0 0 46px rgba(100,180,255,0.55);
+  }
+  66% {
+    box-shadow:
+      0 0 18px rgba(170,120,255,0.9),
+      0 0 48px rgba(170,120,255,0.55);
+  }
+  100% {
+    box-shadow:
+      0 0 14px rgba(140,230,255,0.75),
+      0 0 34px rgba(140,230,255,0.4);
+  }
+}
+
+body.playing.artist-rebel .play-btn {
+  animation: glowCycle-rebel 6s ease-in-out infinite;
+}
+
+body.playing.artist-forte .play-btn {
+  animation: glowCycle-forte 6s ease-in-out infinite;
+}
+
+body.playing.artist-aoru .play-btn {
+  animation: glowCycle-aoru 6s ease-in-out infinite;
+}
+
+body.playing.artist-xea .play-btn {
+  animation: glowCycle-xea 6s ease-in-out infinite;
+}
+
+body.playing.artist-shinoyu .play-btn {
+  animation: glowCycle-shinoyu 6s ease-in-out infinite;
+}
+
+body.playing.artist-riwon .play-btn {
+  animation: glowCycle-riwon 6s ease-in-out infinite;
+}
+
+body.playing.artist-forxea .play-btn {
+  animation: glowCycle-forxea 6s ease-in-out infinite;
+}
+
+body.playing.artist-idol .play-btn {
+  animation: glowCycle-idol 6s ease-in-out infinite;
+}
+
+  
 .play-btn svg {
   width: 26px;
   height: 26px;
@@ -335,6 +569,13 @@ const albums = {
   ],
   AlbumB: [
     { id:"uC44M7_srjg", title:"DOGLAND", artist:"REBEL" }
+    { id:"xzWDxSVybT8", title:"愛のけだもの", artist:"ふぉるせあ" }
+    { id:"5q9zozZD2nA", title:"Snow halation", artist:"アイドル部" }
+    { id:"RqltfjkkJJk", title:"ホメオスタシス", artist:"ふぉるて" }
+    { id:"rAFw4j-rI-c", title:"IN_MY_HEAD", artist:"aoru" }
+    { id:"lhGiqShlmzo", title:"ヤミタイガール", artist:"xea" }
+    { id:"PcR7uUsNmuI", title:"from Y to Y", artist:"水篠 瀀" }
+    { id:"ZlTv_FDY8Cc", title:キルマー", artist:"りをん" }
   ]
 };
 
@@ -512,8 +753,53 @@ function format(sec) {
   const s = Math.floor(sec % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }
+
+const artistThemes = {
+  "REBEL": { className: "artist-rebel" },
+  "aoru": { className: "artist-aoru" },
+  "xea": { className: "artist-xea" },
+  "ふぉるて": { className: "artist-forte" },
+  "水篠 瀀": { className: "artist-shinoyu" },
+  "りをん": { className: "artist-riwon" },
+  "アイドル部": { className: "artist-idol" },
+  "ふぉるせあ": { className: "artist-forxea" },
+  DEFAULT: { className: "artist-default" }
+};
+
+function applyArtistTheme(artist) {
+  const key = artist.trim();
+  const theme = artistThemes[key] || artistThemes.DEFAULT;
+
+  document.body.classList.remove(
+    ...Object.values(artistThemes).map(t => t.className)
+  );
+  document.body.classList.add(theme.className);
+}
+
+function updateInfo() {
+  const track = album[index];
+
+  title.textContent = track.title;
+  artist.textContent = track.artist;
+  titleLink.href = "https://www.youtube.com/watch?v=" + track.id;
+
+  applyArtistTheme(track.artist);
+}
+
+function applyArtistTheme(artistName) {
+  // 既存テーマを全削除
+  Object.values(artistThemes).forEach(t => {
+    document.body.classList.remove(t.className);
+  });
+
+  // 該当アーティスト or DEFAULT
+  const theme = artistThemes[artistName] || artistThemes.DEFAULT;
+  document.body.classList.add(theme.className);
+}
+
 </script>
 
 </body>
 </html>
+
 
