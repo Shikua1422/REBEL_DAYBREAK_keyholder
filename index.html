@@ -568,14 +568,14 @@ const albums = {
     { id:"p8iNb7sTNiY", title:"ロストワンの号哭", artist:"REBEL" }
   ],
   AlbumB: [
-    { id:"uC44M7_srjg", title:"DOGLAND", artist:"REBEL" }
-    { id:"xzWDxSVybT8", title:"愛のけだもの", artist:"ふぉるせあ" }
-    { id:"5q9zozZD2nA", title:"Snow halation", artist:"アイドル部" }
-    { id:"RqltfjkkJJk", title:"ホメオスタシス", artist:"ふぉるて" }
-    { id:"rAFw4j-rI-c", title:"IN_MY_HEAD", artist:"aoru" }
-    { id:"lhGiqShlmzo", title:"ヤミタイガール", artist:"xea" }
-    { id:"PcR7uUsNmuI", title:"from Y to Y", artist:"水篠 瀀" }
-    { id:"ZlTv_FDY8Cc", title:キルマー", artist:"りをん" }
+    { id:"uC44M7_srjg", title:"DOGLAND", artist:"REBEL" },
+    { id:"xzWDxSVybT8", title:"愛のけだもの", artist:"ふぉるせあ" },
+    { id:"5q9zozZD2nA", title:"Snow halation", artist:"アイドル部" },
+    { id:"RqltfjkkJJk", title:"ホメオスタシス", artist:"ふぉるて" },
+    { id:"rAFw4j-rI-c", title:"IN_MY_HEAD", artist:"aoru" },
+    { id:"lhGiqShlmzo", title:"ヤミタイガール", artist:"xea" },
+    { id:"PcR7uUsNmuI", title:"from Y to Y", artist:"水篠 瀀" },
+    { id:"ZlTv_FDY8Cc", title:"キルマー", artist:"りをん" }
   ]
 };
 
@@ -597,6 +597,11 @@ const stage = document.querySelector(".stage");
 const titleLink = document.getElementById("titleLink");
 const albumSheet = document.getElementById("albumSheet");
 
+const title = document.getElementById("title");
+const artist = document.getElementById("artist");
+const current = document.getElementById("current");
+const duration = document.getElementById("duration");
+  
 /* ===== アルバム一覧 ===== */
 function toggleAlbumSheet(){
   albumSheet.classList.toggle("open");
@@ -801,5 +806,6 @@ function applyArtistTheme(artistName) {
 
 </body>
 </html>
+
 
 
