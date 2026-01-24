@@ -150,13 +150,18 @@ body {
   color: #aaa;
 }
 
+/* ▼ 曲名リンク用（追加・他未変更） */
 .title-link {
   color: #fff;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  opacity: 0.85;
   position: relative;
+}
+.title-link:hover {
+  opacity: 1;
 }
 .youtube-icon {
   width: 14px;
@@ -170,6 +175,7 @@ body {
 .controls {
   margin-top: 18px;
 }
+
 .control-buttons {
   display: flex;
   justify-content: center;
@@ -177,6 +183,7 @@ body {
   gap: 22px;
   margin-bottom: 10px;
 }
+
 .icon-btn,
 .play-btn {
   background: none;
@@ -184,11 +191,18 @@ body {
   padding: 0;
   cursor: pointer;
 }
+
 .icon-btn svg {
   width: 22px;
   height: 22px;
   fill: #aaa;
+  transition: fill 0.2s;
 }
+.icon-btn:hover svg {
+  fill: #fff;
+}
+
+/* 再生ボタン */
 .play-btn {
   width: 56px;
   height: 56px;
@@ -198,6 +212,21 @@ body {
   align-items: center;
   justify-content: center;
 }
+
+/* ===== 再生中の淡い照らし ===== */
+@keyframes glowCycle {
+  0% { box-shadow: 0 0 12px rgba(255,255,255,0.7),0 0 28px rgba(255,255,255,0.35); }
+  20% { box-shadow: 0 0 14px rgba(255,80,80,0.75),0 0 32px rgba(255,80,80,0.4); }
+  40% { box-shadow: 0 0 14px rgba(120,220,255,0.75),0 0 32px rgba(120,220,255,0.4); }
+  60% { box-shadow: 0 0 16px rgba(100,180,255,0.85),0 0 40px rgba(100,180,255,0.5); }
+  80% { box-shadow: 0 0 14px rgba(180,120,255,0.75),0 0 32px rgba(180,120,255,0.4); }
+  100% { box-shadow: 0 0 12px rgba(255,255,255,0.7),0 0 28px rgba(255,255,255,0.35); }
+}
+
+body.playing .play-btn {
+  animation: glowCycle 6s ease-in-out infinite;
+}
+
 .play-btn svg {
   width: 26px;
   height: 26px;
@@ -207,23 +236,34 @@ body {
 /* ===== シークバー ===== */
 .seekbar {
   width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
   height: 4px;
   border-radius: 2px;
-  background: linear-gradient(to right,#fff var(--progress,0%),#444 0%);
+  background: linear-gradient(
+    to right,
+    #fff 0%,
+    #fff var(--progress, 0%),
+    #444 var(--progress, 0%),
+    #444 100%
+  );
 }
 .seekbar::-webkit-slider-thumb {
+  -webkit-appearance: none;
   width: 12px;
   height: 12px;
   background: #fff;
   border-radius: 50%;
+  cursor: pointer;
 }
 
-/* ===== 時間 ===== */
+/* 時間 */
 .time {
   font-size: 12px;
   color: #aaa;
   display: flex;
   justify-content: space-between;
+  margin-top: 4px;
 }
 </style>
 </head>
@@ -239,10 +279,10 @@ body {
   <svg viewBox="0 0 24 24"><path d="M5 9h14v2H5zm0 4h14v2H5z"/></svg>
 </div>
 
-<div class="playlist" id="playlist"></div>
-
 <!-- アルバム一覧 -->
 <div class="album-sheet" id="albumSheet"></div>
+  
+<div class="playlist" id="playlist"></div>
 
 <div class="container">
   <div class="stage">
@@ -250,11 +290,12 @@ body {
     <div id="cd" class="cd"></div>
   </div>
 
+  <!-- ▼ 曲名タップでYouTubeへ（ここだけ変更） -->
   <div class="title">
-    <a id="titleLink" class="title-link" target="_blank">
+    <a id="titleLink" class="title-link" target="_blank" rel="noopener">
       <span id="title"></span>
-      <svg class="youtube-icon" viewBox="0 0 24 24">
-        <path d="M9.6 14.6V7.9l6.4 3.4z"/>
+      <svg class="youtube-icon" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M23.5 6.2s-.2-1.6-.9-2.3c-.9-.9-1.9-.9-2.4-1C16.8 2.5 12 2.5 12 2.5s-4.8 0-8.2.4c-.5.1-1.5.1-2.4 1-.7.7-.9 2.3-.9 2.3S0 8 0 9.8v1.8c0 1.8.2 3.6.2 3.6s.2 1.6.9 2.3c.9.9 2.1.9 2.6 1 1.9.2 8.3.4 8.3.4s4.8 0 8.2-.4c.5-.1 1.5-.1 2.4-1 .7-.7.9-2.3.9-2.3s.2-1.8.2-3.6V9.8c0-1.8-.2-3.6-.2-3.6zM9.6 14.6V7.9l6.4 3.4-6.4 3.3z"/>
       </svg>
     </a>
   </div>
@@ -286,7 +327,7 @@ body {
 
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
-const albums = {
+const album = {
   AlbumA: [
     { id:"HCoTcCMLRsM", title:"Q", artist:"REBEL" },
     { id:"p8iNb7sTNiY", title:"ロストワンの号哭", artist:"REBEL" }
@@ -296,11 +337,19 @@ const albums = {
   ]
 };
 
-let currentAlbum = "AlbumA";
-let album = albums[currentAlbum];
-let index = 0;
-let player;
 
+let player, index = 0;
+let playing = false, seeking = false;
+let rotationTimer = null;
+let cdMini = false;
+
+const cd = document.getElementById("cd");
+const playIcon = document.getElementById("playIcon");
+const pauseIcon = document.getElementById("pauseIcon");
+const seekbar = document.getElementById("seekbar");
+const playlist = document.getElementById("playlist");
+const stage = document.querySelector(".stage");
+const titleLink = document.getElementById("titleLink");
 const albumSheet = document.getElementById("albumSheet");
 
 function toggleAlbumSheet(){
@@ -323,17 +372,136 @@ function renderAlbums(){
   });
 }
 
-function onYouTubeIframeAPIReady(){
-  player=new YT.Player("player",{videoId:album[0].id});
-  renderAlbums();
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player("player", {
+    videoId: album[0].id,
+    playerVars: { playsinline: 1, controls: 0 },
+    events: { onReady, onStateChange }
+  });
 }
 
-function loadTrack(i){
-  index=i;
+function onReady() {
+  player.setVolume(0);
+  renderList();
+  updateInfo();
+  loop();
+}
+
+function onStateChange(e) {
+  if (e.data === YT.PlayerState.PLAYING) {
+    startRotation();
+    playing = true;
+    playIcon.style.display = "none";
+    pauseIcon.style.display = "block";
+    document.body.classList.add("playing");
+  }
+  if (e.data === YT.PlayerState.ENDED) next();
+}
+
+function toggle() { playing ? pause() : play(); }
+
+function play() {
+  player.playVideo();
+  playing = true;
+  playIcon.style.display = "none";
+  pauseIcon.style.display = "block";
+  document.body.classList.add("playing");
+}
+
+function pause() {
+  player.pauseVideo();
+  stopRotation();
+  player.setVolume(0);
+  playing = false;
+  playIcon.style.display = "block";
+  pauseIcon.style.display = "none";
+  document.body.classList.remove("playing");
+}
+
+/* 回転 */
+function startRotation() {
+  if (cd.style.animationPlayState === "running") return;
+  cd.style.animationPlayState = "running";
+  clearTimeout(rotationTimer);
+  rotationTimer = setTimeout(() => player.setVolume(100), 300);
+}
+function stopRotation() {
+  cd.style.animationPlayState = "paused";
+  clearTimeout(rotationTimer);
+}
+
+/* CDタップ */
+cd.onclick = () => {
+  cdMini = !cdMini;
+  cd.classList.toggle("mini", cdMini);
+  stage.classList.toggle("cd-mini", cdMini);
+};
+
+/* シーク */
+seekbar.oninput = () => {
+  seeking = true;
+  seekbar.style.setProperty("--progress", seekbar.value + "%");
+};
+seekbar.onchange = () => {
+  player.seekTo((seekbar.value / 100) * player.getDuration(), true);
+  seeking = false;
+};
+
+function loop() {
+  if (player && player.getCurrentTime && !seeking) {
+    const cur = player.getCurrentTime();
+    const dur = player.getDuration();
+    const percent = (cur / dur) * 100;
+    seekbar.value = percent;
+    seekbar.style.setProperty("--progress", percent + "%");
+    current.textContent = format(cur);
+    duration.textContent = format(dur);
+  }
+  requestAnimationFrame(loop);
+}
+
+/* 曲操作 */
+function loadTrack(i) {
+  index = i;
+  stopRotation();
+  player.setVolume(0);
   player.loadVideoById(album[index].id);
-  title.textContent=album[index].title;
-  artist.textContent=album[index].artist;
-  titleLink.href="https://www.youtube.com/watch?v="+album[index].id;
+  updateInfo();
+  renderList();
+  playing = false;
+  playIcon.style.display = "block";
+  pauseIcon.style.display = "none";
+  document.body.classList.remove("playing");
+}
+function next() { loadTrack((index + 1) % album.length); }
+function prev() { loadTrack((index - 1 + album.length) % album.length); }
+
+/* プレイリスト */
+function renderList() {
+  playlist.innerHTML = "<h3>アルバム</h3>";
+  album.forEach((t, i) => {
+    const div = document.createElement("div");
+    div.className = "track" + (i === index ? " active" : "");
+    div.innerHTML = `${t.title}<span>${t.artist}</span>`;
+    div.onclick = () => { loadTrack(i); toggleList(); };
+    playlist.appendChild(div);
+  });
+}
+
+function toggleList() {
+  playlist.classList.toggle("open");
+}
+
+function updateInfo() {
+  title.textContent = album[index].title;
+  artist.textContent = album[index].artist;
+  titleLink.href = "https://www.youtube.com/watch?v=" + album[index].id;
+}
+
+function format(sec) {
+  const m = Math.floor(sec / 60);
+  const s = Math.floor(sec % 60).toString().padStart(2, "0");
+  return `${m}:${s}`;
 }
 </script>
 
