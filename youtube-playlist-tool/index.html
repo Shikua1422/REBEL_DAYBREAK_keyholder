@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<title>YouTube Playlist → Albumコード生成</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #111;
+  color: #fff;
+  padding: 20px;
+}
+input, button, textarea {
+  width: 100%;
+  margin: 6px 0;
+  padding: 8px;
+  font-size: 14px;
+}
+button {
+  background: #444;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+.video-row {
+  border-bottom: 1px solid #333;
+  padding: 8px 0;
+}
+.video-row input {
+  width: calc(50% - 6px);
+  display: inline-block;
+}
+textarea {
+  height: 200px;
+  background: #000;
+  color: #0f0;
+}
+</style>
+</head>
+<body>
+
+<h2>YouTube 再生リスト → Albumコード生成</h2>
+
+<input id="playlistInput" placeholder="再生リストURL または ID" />
+<button onclick="loadPlaylist()">動画ID取得</button>
+
+<div id="videoList"></div>
+
+<button onclick="generateCode()">JSコード生成</button>
+<textarea id="output"></textarea>
+
+<script>
+const API_KEY = "AIzaSyCO-5yTbTfXy-oNdW7lhFJADQsHtsWkPuE";
+
+function extractPlaylistId(input) {
+  if (input.includes("list=")) {
+    return new URL(input).searchParams.get("list");
+  }
+  return input;
+}
+
+async function loadPlaylist() {
+  const playlistId = extractPlaylistId(
+    document.getElementById("playlistInput").value
+  );
+
+  const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=contentDetails&playlistId=${playlistId}&maxResults=50&key=${API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+
+  const list = document.getElementById("videoList");
+  list.innerHTML = "";
+
+  data.items.forEach(item => {
+    const videoId = item.contentDetails.videoId;
+    const div = document.createElement("div");
+    div.className = "video-row";
+    div.innerHTML = `
+      <div>id: <b>${videoId}</b></div>
+      <input placeholder="title" />
+      <input placeholder="artist" />
+    `;
+    list.appendChild(div);
+  });
+}
+
+function generateCode() {
+  const rows = document.querySelectorAll(".video-row");
+  const lines = [];
+
+  rows.forEach(row => {
+    const id = row.querySelector("b").textContent;
+    const inputs = row.querySelectorAll("input");
+    const title = inputs[0].value || "";
+    const artist = inputs[1].value || "";
+
+    lines.push(`  { id:"${id}", title:"${title}", artist:"${artist}" }`);
+  });
+
+  const result =
+`AlbumA: [
+${lines.join(",\n")}
+]`;
+
+  document.getElementById("output").value = result;
+}
+</script>
+
+</body>
+</html>
