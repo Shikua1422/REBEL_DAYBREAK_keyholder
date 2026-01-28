@@ -46,15 +46,10 @@ textarea {
 <button onclick="loadPlaylist()">動画ID取得</button>
 
 <label style="display:block;margin:10px 0;">
-  <input type="checkbox" id="bulkArtistToggle" />
-  artistを一括入力する
+  <input type="checkbox" id="bulkArtistToggle">
+  artistが同じ場合のみ一括入力する
 </label>
-
-<input
-  id="bulkArtistInput"
-  placeholder="一括で設定する artist"
-  disabled
-/>
+<input id="bulkArtistInput" placeholder="一括で設定する artist" disabled>
 
 <div id="videoList"></div>
 
@@ -64,13 +59,17 @@ textarea {
 <script>
 const API_KEY = "AIzaSyCO-5yTbTfXy-oNdW7lhFJADQsHtsWkPuE";
 
+/* ===== 再生リストID抽出 ===== */
 function extractPlaylistId(input) {
-  if (input.includes("list=")) {
-    return new URL(input).searchParams.get("list");
-  }
-  return input;
+  try {
+    if (input.includes("list=")) {
+      return new URL(input).searchParams.get("list");
+    }
+  } catch (e) {}
+  return input.trim();
 }
 
+/* ===== 再生リスト順で全件取得 ===== */
 async function loadPlaylist() {
   const playlistId = extractPlaylistId(
     document.getElementById("playlistInput").value
@@ -82,7 +81,6 @@ async function loadPlaylist() {
   let allItems = [];
   let pageToken = "";
 
-  // 🔁 全ページ取得（順番はAPIが保証）
   while (true) {
     const url =
       `https://www.googleapis.com/youtube/v3/playlistItems` +
@@ -95,6 +93,11 @@ async function loadPlaylist() {
     const res = await fetch(url);
     const data = await res.json();
 
+    if (!data.items) {
+      list.innerHTML = "取得に失敗しました（APIキーやURLを確認）";
+      return;
+    }
+
     allItems = allItems.concat(data.items);
 
     if (!data.nextPageToken) break;
@@ -103,7 +106,6 @@ async function loadPlaylist() {
 
   list.innerHTML = "";
 
-  // 👉 取得順 = 再生リスト順
   allItems.forEach((item, index) => {
     const videoId = item.contentDetails.videoId;
 
@@ -116,8 +118,34 @@ async function loadPlaylist() {
     `;
     list.appendChild(div);
   });
+
+  applyBulkArtist();
 }
 
+/* ===== artist一括入力（同じ時だけ） ===== */
+const bulkToggle = document.getElementById("bulkArtistToggle");
+const bulkInput  = document.getElementById("bulkArtistInput");
+
+bulkToggle.addEventListener("change", () => {
+  bulkInput.disabled = !bulkToggle.checked;
+  applyBulkArtist();
+});
+
+bulkInput.addEventListener("input", applyBulkArtist);
+
+function applyBulkArtist() {
+  if (!bulkToggle.checked) return;
+
+  const rows = document.querySelectorAll(".video-row");
+  rows.forEach(row => {
+    const artistInput = row.querySelectorAll("input")[1];
+    if (!artistInput.value) {
+      artistInput.value = bulkInput.value;
+    }
+  });
+}
+
+/* ===== JSコード生成 ===== */
 function generateCode() {
   const rows = document.querySelectorAll(".video-row");
   const lines = [];
@@ -138,34 +166,6 @@ ${lines.join(",\n")}
 
   document.getElementById("output").value = result;
 }
-
-const bulkToggle = document.getElementById("bulkArtistToggle");
-const bulkInput  = document.getElementById("bulkArtistInput");
-
-// トグルON/OFF
-bulkToggle.addEventListener("change", () => {
-  bulkInput.disabled = !bulkToggle.checked;
-
-  if (bulkToggle.checked) {
-    applyBulkArtist();
-  }
-});
-
-// 一括入力欄が変更されたら即反映
-bulkInput.addEventListener("input", applyBulkArtist);
-
-function applyBulkArtist() {
-  if (!bulkToggle.checked) return;
-
-  const rows = document.querySelectorAll(".video-row");
-  rows.forEach(row => {
-    const artistInput = row.querySelectorAll("input")[1];
-    if (!artistInput.value) {
-      artistInput.value = bulkInput.value;
-    }
-  });
-}
-
 </script>
 
 </body>
