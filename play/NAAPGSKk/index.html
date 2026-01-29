@@ -742,33 +742,39 @@ function loadTrack(i) {
   pauseIcon.style.display = "none";
   document.body.classList.remove("playing");
 
-  // ▼ ニコニコかどうか判定
-  if (track.platform === "nicovideo") {
-    // YouTube再生停止
-    if (player && player.stopVideo) {
-      player.stopVideo();
-    }
+  const yt = document.getElementById("ytPlayer");
+  const nico = document.getElementById("nicoPlayer");
 
-    // iframeを直接差し替え
-    document.getElementById("player").innerHTML = `
+  if (track.platform === "nicovideo") {
+    // YouTube 停止 & 非表示
+    if (player && player.stopVideo) player.stopVideo();
+    yt.style.display = "none";
+
+    // Nico 表示
+    nico.style.display = "block";
+    nico.innerHTML = `
       <iframe
+        src="https://embed.nicovideo.jp/watch/${track.id}"
         width="100%"
         height="100%"
-        src="https://embed.nicovideo.jp/watch/${track.id}"
         frameborder="0"
         allowfullscreen>
       </iframe>
     `;
 
-    // シーク・再生UIを実質無効化
+    // UI無効化
     seekbar.value = 0;
     seekbar.style.setProperty("--progress", "0%");
     current.textContent = "0:00";
     duration.textContent = "--:--";
 
   } else {
-    // ▼ YouTube（従来通り）
-    document.getElementById("player").innerHTML = "";
+    // Nico 非表示
+    nico.style.display = "none";
+    nico.innerHTML = "";
+
+    // YouTube 表示
+    yt.style.display = "block";
     player.loadVideoById(track.id);
     player.setVolume(0);
   }
