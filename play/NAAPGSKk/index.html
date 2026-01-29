@@ -520,9 +520,10 @@ body.playing.artist-idol .play-btn {
 
 <div class="container">
   <div class="stage">
-    <div id="player" class="video"></div>
+    <div id="ytPlayer" class="video"></div>
+    <div id="nicoPlayer" class="video" style="display:none"></div>
     <div id="cd" class="cd"></div>
-  </div>
+</div>
 
   <!-- ▼ 曲名タップでYouTubeへ（ここだけ変更） -->
   <div class="title">
@@ -591,7 +592,6 @@ const albums = {
 
 let currentAlbumKey = "AlbumA";
 let album = albums[currentAlbumKey];
-
 let player, index = 0;
 let playing = false, seeking = false;
 let rotationTimer = null;
@@ -611,7 +611,6 @@ const title = document.getElementById("title");
 const artist = document.getElementById("artist");
 const current = document.getElementById("current");
 const duration = document.getElementById("duration");
-const platform = track.platform || "youtube";
   
 /* ===== アルバム一覧 ===== */
 function toggleAlbumSheet(){
@@ -636,10 +635,10 @@ function renderAlbums(){
 
 /* ===== YouTube ===== */
 function onYouTubeIframeAPIReady() {
-  player = new YT.Player("player", {
-    videoId: album[0].id,
-    playerVars: { playsinline: 1, controls: 0 },
-    events: { onReady, onStateChange }
+  player = new YT.Player("ytPlayer", {
+  videoId: album[0].id,
+  playerVars: { playsinline: 1, controls: 0 },
+  events: { onReady, onStateChange }
   });
 }
 
@@ -840,15 +839,6 @@ function applyArtistTheme(artist) {
   document.body.classList.add(theme.className);
 }
 
-function updateInfo() {
-  const track = album[index];
-
-  title.textContent = track.title;
-  artist.textContent = track.artist;
-  titleLink.href = "https://www.youtube.com/watch?v=" + track.id;
-
-  applyArtistTheme(track.artist);
-}
 
 function applyArtistTheme(artistName) {
   // 既存テーマを全削除
