@@ -11,7 +11,7 @@ body {
   color: #fff;
   padding: 20px;
 }
-input, button, textarea {
+input, button, textarea, select {
   width: 100%;
   margin: 6px 0;
   padding: 8px;
@@ -25,16 +25,20 @@ button {
 }
 .video-row {
   border-bottom: 1px solid #333;
-  padding: 8px 0;
+  padding: 10px 0;
 }
-.video-row input {
-  width: calc(50% - 6px);
-  display: inline-block;
+.row-flex {
+  display: flex;
+  gap: 6px;
 }
 textarea {
-  height: 200px;
+  height: 220px;
   background: #000;
   color: #0f0;
+}
+select {
+  background: #222;
+  color: #fff;
 }
 </style>
 </head>
@@ -113,8 +117,14 @@ async function loadPlaylist() {
     div.className = "video-row";
     div.innerHTML = `
       <div>${index + 1}. id: <b>${videoId}</b></div>
-      <input placeholder="title" />
-      <input placeholder="artist" />
+      <div class="row-flex">
+        <input placeholder="title" />
+        <input placeholder="artist" />
+      </div>
+      <select>
+        <option value="youtube">YouTube</option>
+        <option value="nicovideo">niconico</option>
+      </select>
     `;
     list.appendChild(div);
   });
@@ -122,7 +132,7 @@ async function loadPlaylist() {
   applyBulkArtist();
 }
 
-/* ===== artist一括入力（同じ時だけ） ===== */
+/* ===== artist一括入力 ===== */
 const bulkToggle = document.getElementById("bulkArtistToggle");
 const bulkInput  = document.getElementById("bulkArtistInput");
 
@@ -153,14 +163,19 @@ function generateCode() {
   rows.forEach(row => {
     const id = row.querySelector("b").textContent;
     const inputs = row.querySelectorAll("input");
+    const select = row.querySelector("select");
+
     const title = inputs[0].value || "";
     const artist = inputs[1].value || "";
+    const platform = select.value;
 
-    lines.push(`  { id:"${id}", title:"${title}", artist:"${artist}" }`);
+    lines.push(
+      `  { id:"${id}", title:"${title}", artist:"${artist}", platform:"${platform}" }`
+    );
   });
 
   const result =
-`AlbumA: [
+`AlbumB: [
 ${lines.join(",\n")}
 ]`;
 
