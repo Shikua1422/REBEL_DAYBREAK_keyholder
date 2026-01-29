@@ -576,6 +576,16 @@ const albums = {
     { id:"lhGiqShlmzo", title:"ヤミタイガール", artist:"xea" },
     { id:"PcR7uUsNmuI", title:"from Y to Y", artist:"水篠 瀀" },
     { id:"ZlTv_FDY8Cc", title:"キルマー", artist:"りをん" }
+  ],
+  マイベスト: [
+  { id:"eYmfhFoXz68", title:"ブリキノダンス", artist:"aoru", platform:"youtube" },
+  { id:"7FELw11Zsek", title:"SOS", artist:"aoru", platform:"youtube" },
+  { id:"UQACzbW-X0M", title:"UNDEAD", artist:"aoru", platform:"youtube" },
+  { id:"MDWVOoMWikU", title:"青", artist:"aoru", platform:"youtube" },
+  { id:"JLuP-iWAaPk", title:"ピタゴラス・ウィッチ", artist:"aoru", platform:"youtube" },
+  { id:"9ank6RL50dA", title:"花に風", artist:"aoru", platform:"youtube" },
+  { id:"Grcty3UZZbU", title:"リコレクションエンドロウル", artist:"aoru", platform:"youtube" },
+  { id:"sm42112160", title:"ワールズエンド・ダンスホール", artist:"aoru", platform:"nicovideo" }
   ]
 };
 
@@ -601,6 +611,7 @@ const title = document.getElementById("title");
 const artist = document.getElementById("artist");
 const current = document.getElementById("current");
 const duration = document.getElementById("duration");
+const platform = track.platform || "youtube";
   
 /* ===== アルバム一覧 ===== */
 function toggleAlbumSheet(){
@@ -652,7 +663,14 @@ function onStateChange(e) {
 }
 
 /* ===== 再生 ===== */
-function toggle() { playing ? pause() : play(); }
+function toggle() {
+  const track = album[index];
+  if (track.platform === "nicovideo") {
+    // ニコニコは iframe 側の操作に任せる
+    return;
+  }
+  playing ? pause() : play();
+}
 
 function play() {
   player.playVideo();
@@ -717,15 +735,47 @@ function loop() {
 /* ===== 曲操作 ===== */
 function loadTrack(i) {
   index = i;
+  const track = album[index];
+
   stopRotation();
-  player.setVolume(0);
-  player.loadVideoById(album[index].id);
-  updateInfo();
-  renderList();
   playing = false;
   playIcon.style.display = "block";
   pauseIcon.style.display = "none";
   document.body.classList.remove("playing");
+
+  // ▼ ニコニコかどうか判定
+  if (track.platform === "nicovideo") {
+    // YouTube再生停止
+    if (player && player.stopVideo) {
+      player.stopVideo();
+    }
+
+    // iframeを直接差し替え
+    document.getElementById("player").innerHTML = `
+      <iframe
+        width="100%"
+        height="100%"
+        src="https://embed.nicovideo.jp/watch/${track.id}"
+        frameborder="0"
+        allowfullscreen>
+      </iframe>
+    `;
+
+    // シーク・再生UIを実質無効化
+    seekbar.value = 0;
+    seekbar.style.setProperty("--progress", "0%");
+    current.textContent = "0:00";
+    duration.textContent = "--:--";
+
+  } else {
+    // ▼ YouTube（従来通り）
+    document.getElementById("player").innerHTML = "";
+    player.loadVideoById(track.id);
+    player.setVolume(0);
+  }
+
+  updateInfo();
+  renderList();
 }
 function next() { loadTrack((index + 1) % album.length); }
 function prev() { loadTrack((index - 1 + album.length) % album.length); }
@@ -748,9 +798,18 @@ function toggleList() {
 
 /* ===== 情報 ===== */
 function updateInfo() {
-  title.textContent = album[index].title;
-  artist.textContent = album[index].artist;
-  titleLink.href = "https://www.youtube.com/watch?v=" + album[index].id;
+  const track = album[index];
+
+  title.textContent = track.title;
+  artist.textContent = track.artist;
+
+  if (track.platform === "nicovideo") {
+    titleLink.href = "https://www.nicovideo.jp/watch/" + track.id;
+  } else {
+    titleLink.href = "https://www.youtube.com/watch?v=" + track.id;
+  }
+
+  applyArtistTheme(track.artist);
 }
 
 function format(sec) {
