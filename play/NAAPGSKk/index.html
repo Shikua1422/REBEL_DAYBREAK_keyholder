@@ -115,7 +115,10 @@ body {
   width: 360px;
   height: 202px;
 }
-
+.video.interactive {
+  pointer-events: auto;
+}
+  
 /* ===== CD ===== */
 .cd {
   position: absolute;
@@ -746,21 +749,23 @@ function loadTrack(i) {
   const nico = document.getElementById("nicoPlayer");
 
   if (track.platform === "nicovideo") {
-    // YouTube 停止 & 非表示
-    if (player && player.stopVideo) player.stopVideo();
-    yt.style.display = "none";
+  // YouTube 停止 & 非表示
+  if (player && player.stopVideo) player.stopVideo();
+  yt.style.display = "none";
 
-    // Nico 表示
-    nico.style.display = "block";
-    nico.innerHTML = `
-      <iframe
-        src="https://embed.nicovideo.jp/watch/${track.id}"
-        width="100%"
-        height="100%"
-        frameborder="0"
-        allowfullscreen>
-      </iframe>
-    `;
+  // Nico 表示 & 操作可能に
+  nico.style.display = "block";
+  nico.classList.add("interactive");
+
+  nico.innerHTML = `
+    <iframe
+      src="https://embed.nicovideo.jp/watch/${track.id}"
+      width="100%"
+      height="100%"
+      frameborder="0"
+      allowfullscreen>
+    </iframe>
+  `;
 
     // UI無効化
     seekbar.value = 0;
@@ -769,14 +774,15 @@ function loadTrack(i) {
     duration.textContent = "--:--";
 
   } else {
-    // Nico 非表示
-    nico.style.display = "none";
-    nico.innerHTML = "";
+  // Nico 非表示 & 操作不可
+  nico.style.display = "none";
+  nico.classList.remove("interactive");
+  nico.innerHTML = "";
 
-    // YouTube 表示
-    yt.style.display = "block";
-    player.loadVideoById(track.id);
-    player.setVolume(0);
+  // YouTube 表示
+  yt.style.display = "block";
+  player.loadVideoById(track.id);
+  player.setVolume(0);
   }
 
   updateInfo();
