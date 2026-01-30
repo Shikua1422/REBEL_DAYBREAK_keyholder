@@ -115,7 +115,10 @@ body {
   width: 360px;
   height: 202px;
 }
-
+.video.interactive {
+  pointer-events: auto;
+}
+  
 /* ===== CD ===== */
 .cd {
   position: absolute;
@@ -520,9 +523,10 @@ body.playing.artist-idol .play-btn {
 
 <div class="container">
   <div class="stage">
-    <div id="player" class="video"></div>
+    <div id="ytPlayer" class="video"></div>
+    <div id="nicoPlayer" class="video" style="display:none"></div>
     <div id="cd" class="cd"></div>
-  </div>
+</div>
 
   <!-- ▼ 曲名タップでYouTubeへ（ここだけ変更） -->
   <div class="title">
@@ -576,12 +580,18 @@ const albums = {
     { id:"lhGiqShlmzo", title:"ヤミタイガール", artist:"xea" },
     { id:"PcR7uUsNmuI", title:"from Y to Y", artist:"水篠 瀀" },
     { id:"ZlTv_FDY8Cc", title:"キルマー", artist:"りをん" }
-  ]
+  ],
+  ちゅん。セレクト: [
+  { id:"LJB0wfeuFOo", title:"偽物人間40号", artist:"ふぉるて", platform:"youtube" },
+  { id:"TMiFoNqcQ3E", title:"ヴァニタス", artist:"ふぉるて", platform:"youtube" },
+  { id:"Lgvy6o-Vln0", title:"ヴァンパイア", artist:"ふぉるて", platform:"youtube" },
+  { id:"5TgnU8GZY_4", title:"ダーリンダンス", artist:"ふぉるて", platform:"youtube" },
+  { id:"1YEozle62zQ", title:"コールボーイ", artist:"ふぉるて", platform:"youtube" }
+]
 };
 
 let currentAlbumKey = "AlbumA";
 let album = albums[currentAlbumKey];
-
 let player, index = 0;
 let playing = false, seeking = false;
 let rotationTimer = null;
@@ -625,10 +635,10 @@ function renderAlbums(){
 
 /* ===== YouTube ===== */
 function onYouTubeIframeAPIReady() {
-  player = new YT.Player("player", {
-    videoId: album[0].id,
-    playerVars: { playsinline: 1, controls: 0 },
-    events: { onReady, onStateChange }
+  player = new YT.Player("ytPlayer", {
+  videoId: album[0].id,
+  playerVars: { playsinline: 1, controls: 0 },
+  events: { onReady, onStateChange }
   });
 }
 
@@ -652,7 +662,14 @@ function onStateChange(e) {
 }
 
 /* ===== 再生 ===== */
-function toggle() { playing ? pause() : play(); }
+function toggle() {
+  const track = album[index];
+  if (track.platform === "nicovideo") {
+    // ニコニコは iframe 側の操作に任せる
+    return;
+  }
+  playing ? pause() : play();
+}
 
 function play() {
   player.playVideo();
@@ -717,15 +734,56 @@ function loop() {
 /* ===== 曲操作 ===== */
 function loadTrack(i) {
   index = i;
+  const track = album[index];
+
   stopRotation();
-  player.setVolume(0);
-  player.loadVideoById(album[index].id);
-  updateInfo();
-  renderList();
   playing = false;
   playIcon.style.display = "block";
   pauseIcon.style.display = "none";
   document.body.classList.remove("playing");
+
+  const yt = document.getElementById("ytPlayer");
+  const nico = document.getElementById("nicoPlayer");
+
+  if (track.platform === "nicovideo") {
+  // YouTube 停止 & 非表示
+  if (player && player.stopVideo) player.stopVideo();
+  yt.style.display = "none";
+
+  // Nico 表示 & 操作可能に
+  nico.style.display = "block";
+  nico.classList.add("interactive");
+
+  nico.innerHTML = `
+    <iframe
+      src="https://embed.nicovideo.jp/watch/${track.id}"
+      width="100%"
+      height="100%"
+      frameborder="0"
+      allowfullscreen>
+    </iframe>
+  `;
+
+    // UI無効化
+    seekbar.value = 0;
+    seekbar.style.setProperty("--progress", "0%");
+    current.textContent = "0:00";
+    duration.textContent = "--:--";
+
+  } else {
+  // Nico 非表示 & 操作不可
+  nico.style.display = "none";
+  nico.classList.remove("interactive");
+  nico.innerHTML = "";
+
+  // YouTube 表示
+  yt.style.display = "block";
+  player.loadVideoById(track.id);
+  player.setVolume(0);
+  }
+
+  updateInfo();
+  renderList();
 }
 function next() { loadTrack((index + 1) % album.length); }
 function prev() { loadTrack((index - 1 + album.length) % album.length); }
@@ -748,9 +806,18 @@ function toggleList() {
 
 /* ===== 情報 ===== */
 function updateInfo() {
-  title.textContent = album[index].title;
-  artist.textContent = album[index].artist;
-  titleLink.href = "https://www.youtube.com/watch?v=" + album[index].id;
+  const track = album[index];
+
+  title.textContent = track.title;
+  artist.textContent = track.artist;
+
+  if (track.platform === "nicovideo") {
+    titleLink.href = "https://www.nicovideo.jp/watch/" + track.id;
+  } else {
+    titleLink.href = "https://www.youtube.com/watch?v=" + track.id;
+  }
+
+  applyArtistTheme(track.artist);
 }
 
 function format(sec) {
@@ -781,15 +848,6 @@ function applyArtistTheme(artist) {
   document.body.classList.add(theme.className);
 }
 
-function updateInfo() {
-  const track = album[index];
-
-  title.textContent = track.title;
-  artist.textContent = track.artist;
-  titleLink.href = "https://www.youtube.com/watch?v=" + track.id;
-
-  applyArtistTheme(track.artist);
-}
 
 function applyArtistTheme(artistName) {
   // 既存テーマを全削除
@@ -806,5 +864,3 @@ function applyArtistTheme(artistName) {
 
 </body>
 </html>
-
-
