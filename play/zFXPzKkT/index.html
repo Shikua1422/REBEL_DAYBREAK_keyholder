@@ -473,6 +473,10 @@ body.playing.artist-idol .play-btn {
   fill: #000;
 }
 
+.icon-btn.active svg {
+  fill: #fff;
+}
+
 /* ===== シークバー ===== */
 .seekbar {
   width: 100%;
@@ -555,6 +559,12 @@ body.playing.artist-idol .play-btn {
 
       <button class="icon-btn" onclick="next()">
         <svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l8 6-8 6z"/></svg>
+      </button>
+
+      <button class="icon-btn" id="loopBtn" onclick="toggleLoop()">
+        <svg viewBox="0 0 24 24">
+          <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+        </svg>
       </button>
     </div>
 
@@ -668,6 +678,8 @@ let player, index = 0;
 let playing = false, seeking = false;
 let rotationTimer = null;
 let cdMini = false;
+let loopOne = false; // 1曲ループON/OFF
+
 
 /* ===== DOM ===== */
 const cd = document.getElementById("cd");
@@ -683,6 +695,9 @@ const title = document.getElementById("title");
 const artist = document.getElementById("artist");
 const current = document.getElementById("current");
 const duration = document.getElementById("duration");
+const loopBtn = document.getElementById("loopBtn");
+
+
   
 /* ===== アルバム一覧 ===== */
 function toggleAlbumSheet(){
@@ -730,7 +745,15 @@ function onStateChange(e) {
     pauseIcon.style.display = "block";
     document.body.classList.add("playing");
   }
-  if (e.data === YT.PlayerState.ENDED) next();
+
+  if (e.data === YT.PlayerState.ENDED) {
+    if (loopOne) {
+      player.seekTo(0);
+      player.playVideo();
+    } else {
+      next();
+    }
+  }
 }
 
 /* ===== 再生 ===== */
@@ -761,6 +784,11 @@ function pause() {
   document.body.classList.remove("playing");
 }
 
+function toggleLoop() {
+  loopOne = !loopOne;
+  loopBtn.classList.toggle("active", loopOne);
+}
+  
 /* ===== CD回転 ===== */
 function startRotation() {
   if (cd.style.animationPlayState === "running") return;
