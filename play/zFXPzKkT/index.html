@@ -473,8 +473,23 @@ body.playing.artist-idol .play-btn {
   fill: #000;
 }
 
-.icon-btn.active svg {
+#loopBtn svg {
+  opacity: 0.4;
+}
+
+#loopBtn.active svg {
+  opacity: 1;
   fill: #fff;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.6));
+}
+
+#shuffleBtn {
+  opacity: 0.4;
+}
+
+#shuffleBtn.active {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(255,255,255,.6));
 }
 
 /* ===== シークバー ===== */
@@ -548,6 +563,10 @@ body.playing.artist-idol .play-btn {
 
   <div class="controls">
     <div class="control-buttons">
+      <button class="icon-btn" id="loopBtn" onclick="toggleLoop()">
+        <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+      </button>
+      
       <button class="icon-btn" onclick="prev()">
         <svg viewBox="0 0 24 24"><path d="M6 5v14M18 6l-8 6 8 6z"/></svg>
       </button>
@@ -561,10 +580,8 @@ body.playing.artist-idol .play-btn {
         <svg viewBox="0 0 24 24"><path d="M18 5v14M6 6l8 6-8 6z"/></svg>
       </button>
 
-      <button class="icon-btn" id="loopBtn" onclick="toggleLoop()">
-        <svg viewBox="0 0 24 24">
-          <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
-        </svg>
+      <button class="icon-btn" id="shuffleBtn" onclick="toggleShuffle()">
+        <svg viewBox="0 0 24 24"><path d="M16 3h5v5l-1.79-1.79-4.83 4.83-1.42-1.42 4.83-4.83L16 3zm-8 2.41 1.41 1.41-6 6L3 13.41l6-6zM16 16l2.41 2.41-4.83-4.83 1.42-1.42 4.83 4.83L21 16v5h-5l1.79-1.79-4.83-4.83 1.42-1.42L16 16z"/></svg>
       </button>
     </div>
 
@@ -679,7 +696,8 @@ let playing = false, seeking = false;
 let rotationTimer = null;
 let cdMini = false;
 let loopOne = false; // 1曲ループON/OFF
-
+let shuffleOn = false;
+let shuffledOrder = [];
 
 /* ===== DOM ===== */
 const cd = document.getElementById("cd");
@@ -696,7 +714,7 @@ const artist = document.getElementById("artist");
 const current = document.getElementById("current");
 const duration = document.getElementById("duration");
 const loopBtn = document.getElementById("loopBtn");
-
+const shuffleBtn = document.getElementById("shuffleBtn");
 
   
 /* ===== アルバム一覧 ===== */
@@ -831,6 +849,24 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
+function shuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function toggleShuffle() {
+  shuffleOn = !shuffleOn;
+  shuffleBtn.classList.toggle("active", shuffleOn);
+
+  if (shuffleOn) {
+    shuffledOrder = shuffleArray(album.map((_, i) => i));
+  }
+}
+
 /* ===== 曲操作 ===== */
 function loadTrack(i) {
   index = i;
@@ -885,8 +921,26 @@ function loadTrack(i) {
   updateInfo();
   renderList();
 }
-function next() { loadTrack((index + 1) % album.length); }
-function prev() { loadTrack((index - 1 + album.length) % album.length); }
+function next() {
+  if (shuffleOn) {
+    const pos = shuffledOrder.indexOf(currentIndex);
+    const nextPos = (pos + 1) % shuffledOrder.length;
+    currentIndex = shuffledOrder[nextPos];
+  } else {
+    currentIndex = (currentIndex + 1) % album.length;
+  }
+  loadTrack(currentIndex);
+}
+function prev() {
+  if (shuffleOn) {
+    const pos = shuffledOrder.indexOf(currentIndex);
+    const prevPos = (pos - 1 + shuffledOrder.length) % shuffledOrder.length;
+    currentIndex = shuffledOrder[prevPos];
+  } else {
+    currentIndex = (currentIndex - 1 + album.length) % album.length;
+  }
+  loadTrack(currentIndex);
+}
 
 /* ===== プレイリスト ===== */
 function renderList() {
