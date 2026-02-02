@@ -929,23 +929,24 @@ function loadTrack(i) {
 }
 function next() {
   if (shuffleOn) {
-    const pos = shuffledOrder.indexOf(currentIndex);
+    const pos = shuffledOrder.indexOf(index);
     const nextPos = (pos + 1) % shuffledOrder.length;
-    currentIndex = shuffledOrder[nextPos];
+    index = shuffledOrder[nextPos];
   } else {
-    currentIndex = (currentIndex + 1) % album.length;
+    index = (index + 1) % album.length;
   }
-  loadTrack(currentIndex);
+  loadTrack(index);
 }
+
 function prev() {
   if (shuffleOn) {
-    const pos = shuffledOrder.indexOf(currentIndex);
+    const pos = shuffledOrder.indexOf(index);
     const prevPos = (pos - 1 + shuffledOrder.length) % shuffledOrder.length;
-    currentIndex = shuffledOrder[prevPos];
+    index = shuffledOrder[prevPos];
   } else {
-    currentIndex = (currentIndex - 1 + album.length) % album.length;
+    index = (index - 1 + album.length) % album.length;
   }
-  loadTrack(currentIndex);
+  loadTrack(index);
 }
 
 /* ===== プレイリスト ===== */
