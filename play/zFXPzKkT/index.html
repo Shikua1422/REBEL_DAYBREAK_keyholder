@@ -186,11 +186,18 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 22px;
+  gap: 24px;
   margin-bottom: 10px;
 }
 
-.icon-btn,
+.icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .play-btn {
   background: none;
   border: none;
@@ -199,8 +206,8 @@ body {
 }
 
 .icon-btn svg {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   fill: #aaa;
   transition: fill 0.2s;
 }
@@ -484,14 +491,10 @@ body.playing.artist-idol .play-btn {
 }
 
 #shuffleBtn {
-  width: 24px;
-  height: 24px;
   opacity: 0.4;
 }
 
 #shuffleBtn.active {
-  width: 24px;
-  height: 24px;
   opacity: 1;
   filter: drop-shadow(0 0 6px rgba(255,255,255,.6));
 }
