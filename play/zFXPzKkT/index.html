@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+  <link
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+  rel="stylesheet"
+  />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Now Playing</title>
@@ -199,6 +203,12 @@ body {
   cursor: pointer;
 }
 
+.icon-btn .material-symbols-rounded {
+  font-size: 28px;
+  line-height: 1;
+  color: currentColor;
+}
+  
 .icon-btn svg {
   width: 28px;
   height: 28px;
@@ -582,21 +592,7 @@ body.playing.artist-idol .play-btn {
       </button>
 
       <button class="icon-btn" id="shuffleBtn" onclick="toggleShuffle()">
-        <svg viewBox="0 0 24 24">
-          <!-- 奥（下の矢印） -->
-          <path
-            d="M3 17h7l3-3 2 2-4 4H3v-3z"
-            fill="currentColor"
-            opacity="0.6"
-          />
-
-          <!-- 手前（上の矢印） -->
-          <path
-            d="M3 7h7l4 4-2 2-3-3H3V7z
-            M14 7h3V4l4 4-4 4V9h-3l-4 4-2-2 6-6z"
-            fill="currentColor"
-          />
-        </svg>
+        <span class="material-symbols-rounded">shuffle</span>
       </button>
     </div>
 
