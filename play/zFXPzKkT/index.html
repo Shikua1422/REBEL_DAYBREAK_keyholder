@@ -721,9 +721,9 @@ const albums = {
   REBELおまけ: {
     cdImage: "CD.jpg",
     tracks: [
-      { id:"uC44M7_srjg", title:"DOGLAND", artist:"REBEL" },
-      { id:"p8iNb7sTNiY", title:"ロストワンの号哭", artist:"REBEL" },
-      { id:"HCoTcCMLRsM", title:"Q", artist:"REBEL" }
+      { id:"uC44M7_srjg", title:"DOGLAND", artist:"REBEL", platform:"youtube" },
+      { id:"p8iNb7sTNiY", title:"ロストワンの号哭", artist:"REBEL", platform:"youtube" },
+      { id:"HCoTcCMLRsM", title:"Q", artist:"REBEL", platform:"youtube" }
     ]
   }
 };
@@ -795,6 +795,7 @@ function onYouTubeIframeAPIReady() {
 }
 
 function onReady() {
+  player = e.target;
   player.setVolume(0);
   renderList();
   renderAlbums();
