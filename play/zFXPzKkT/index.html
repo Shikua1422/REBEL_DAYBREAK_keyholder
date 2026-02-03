@@ -572,7 +572,7 @@ body.playing.artist-idol .play-btn {
     <div id="ytPlayer" class="video"></div>
     <div id="nicoPlayer" class="video" style="display:none"></div>
     <div id="cd" class="cd"></div>
-</div>
+  </div>
 
   <!-- ▼ 曲名タップでYouTubeへ（ここだけ変更） -->
   <div class="title">
@@ -644,8 +644,8 @@ const albums = {
       { id:"EcyPCQ4cMdA", title:"Real Face", artist:"REBEL", platform:"youtube" },
       { id:"pwLP3GDIhAk", title:"Secret Answer", artist:"REBEL", platform:"youtube" },
       { id:"_j0kfGNwIlw", title:"チュルリラ・チュルリラ・ダッダッダ", artist:"REBEL", platform:"youtube" }
-     ],
-  }
+     ]
+  },
   大阪2部: {
     cdImage: "cd_osaka2.jpg",
     tracks: [
@@ -668,8 +668,8 @@ const albums = {
       { id:"EcyPCQ4cMdA", title:"Real Face", artist:"REBEL", platform:"youtube" },
       { id:"Y9QFjorZWg4", title:"CocktaiL", artist:"REBEL", platform:"youtube" },
       { id:"_j0kfGNwIlw", title:"チュルリラ・チュルリラ・ダッダッダ", artist:"REBEL", platform:"youtube" }
-    ],
-  }
+    ]
+  },
   東京1部: {
     cdImage: "cd_tokyo1.jpg",
     tracks: [
@@ -692,8 +692,8 @@ const albums = {
       { id:"EcyPCQ4cMdA", title:"Real Face", artist:"REBEL", platform:"youtube" },
       { id:"pwLP3GDIhAk", title:"Secret Answer", artist:"REBEL", platform:"youtube" },
       { id:"b2GJcYBoVyg", title:"神のまにまに", artist:"REBEL", platform:"youtube" }
-    ],
-  }
+    ]
+  },
   東京2部: {
     cdImage: "cd_tokyo2.jpg",
     tracks: [
@@ -716,8 +716,8 @@ const albums = {
       { id:"EcyPCQ4cMdA", title:"Real Face", artist:"REBEL", platform:"youtube" },
       { id:"Y9QFjorZWg4", title:"CocktaiL", artist:"REBEL", platform:"youtube" },
       { id:"b2GJcYBoVyg", title:"神のまにまに", artist:"REBEL", platform:"youtube" }
-    ],
-  }
+    ]
+  },
   REBELおまけ: {
     cdImage: "CD.jpg",
     tracks: [
@@ -1048,18 +1048,6 @@ function applyArtistTheme(artist) {
   document.body.classList.remove(
     ...Object.values(artistThemes).map(t => t.className)
   );
-  document.body.classList.add(theme.className);
-}
-
-
-function applyArtistTheme(artistName) {
-  // 既存テーマを全削除
-  Object.values(artistThemes).forEach(t => {
-    document.body.classList.remove(t.className);
-  });
-
-  // 該当アーティスト or DEFAULT
-  const theme = artistThemes[artistName] || artistThemes.DEFAULT;
   document.body.classList.add(theme.className);
 }
 
