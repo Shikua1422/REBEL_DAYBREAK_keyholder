@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <link
+<link
   href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
   rel="stylesheet"
-  />
+/>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#111111">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Now Playing</title>
@@ -1053,6 +1055,10 @@ function applyArtistTheme(artist) {
 }
 
 </script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/service-worker.js");
+}
+</script>
 </body>
 </html>
