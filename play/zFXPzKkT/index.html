@@ -796,7 +796,7 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
-function onReady() {
+function onReady(e) {
   player = e.target;
   player.setVolume(0);
   renderList();
@@ -1055,10 +1055,6 @@ function applyArtistTheme(artist) {
 }
 
 </script>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/service-worker.js");
-}
-</script>
+
 </body>
 </html>
